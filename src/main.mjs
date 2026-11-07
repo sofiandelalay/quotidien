@@ -16,6 +16,7 @@ import { composerBriefing } from './briefing.mjs';
 import { chargerRegles, creerContexte, evaluerRegles } from './regles.mjs';
 import { lireCalendarUrls, lireAgendas, composerAgenda } from './agenda.mjs';
 import { construireMessage, publier } from './ntfy.mjs';
+import { chargerFixture, simuler } from './simuler.mjs';
 import { paris } from './temps.mjs';
 
 /** Exécute une récupération ; en cas d'échec, note la source et renvoie null. */
@@ -67,7 +68,25 @@ async function preparerBriefing({ cfg, jour, pos, prev, air, get, echecs, agenda
   return { briefing: b, commune };
 }
 
+/**
+ * Alerte d'essai : la notification d'une règle calculée sur sa fixture « oui »
+ * (test/fixtures/regles/<id>-oui.json), titre préfixé « [Essai] ». Rien n'est écrit dans state.json.
+ */
+export async function envoyerEssai(id, { env = process.env } = {}) {
+  const cfg = await chargerConfig();
+  const { regles } = await chargerRegles();
+  const regle = regles.find((r) => r.id === id);
+  if (!regle) throw new Error(`règle « ${id} » introuvable`);
+  const fixture = await chargerFixture(fileURLToPath(new URL(`../test/fixtures/regles/${id}-oui.json`, import.meta.url)));
+  const r = simuler(regle, fixture, cfg);
+  if (!r.declenche) throw new Error(`la fixture ${id}-oui ne déclenche pas la règle (${r.raison})`);
+  if (!env.NTFY_TOPIC_BRIEFING) throw new Error('NTFY_TOPIC_BRIEFING manquant');
+  const rep = await publier(construireMessage({ topic: env.NTFY_TOPIC_BRIEFING, titre: `[Essai] ${r.titre}`, message: r.message, priorite: cfg.notification.priorite }));
+  console.log(`Alerte d'essai « ${id} » envoyée (id ${rep.id}) ; state.json non modifié.`);
+}
+
 export async function executer({ opts, env = process.env, maintenant = new Date(), lecteurIcs, cheminEtat } = {}) {
+  if (opts.essai) return envoyerEssai(opts.essai, { env });
   const cfg = await chargerConfig();
   const etat = await lireEtat(cheminEtat);
 
@@ -172,6 +191,7 @@ if (estLanceDirectement) {
       'dry-run': { type: 'boolean', default: false },
       fixtures: { type: 'string' },
       maintenant: { type: 'string' },
+      essai: { type: 'string', default: process.env.ESSAI || '' },
     },
   });
   executer({ opts, maintenant: opts.maintenant ? new Date(opts.maintenant) : new Date() }).catch((e) => {

@@ -28,6 +28,11 @@ on:
         description: "Maintenant, hors fenêtre (le briefing forcé est un test ; une alerte n'est jamais envoyée deux fois)"
         type: boolean
         default: false
+      essai:
+        description: "Alerte d'essai : envoie la notification d'une règle sur données fictives (rien n'est noté dans state.json)"
+        type: choice
+        options: [aucune, rando, voiture, air, gel]
+        default: aucune
 
 permissions:
   contents: write
@@ -83,6 +88,7 @@ jobs:
           # schedule : « auto » (d'après l'heure) ; manuel : le passage choisi
           PASSAGE: ${{ github.event_name == 'workflow_dispatch' && inputs.passage || 'auto' }}
           FORCE: ${{ inputs.force == true }}
+          ESSAI: ${{ inputs.essai != 'aucune' && inputs.essai || '' }}
         run: node src/main.mjs
 
       # Commit de state.json (même après un échec partiel : ce qui est parti ne repartira pas).

@@ -163,3 +163,13 @@ test('sans position récente : Lille ; sans agenda configuré : pas de ligne d\'
   assert.match(journal.join('\n'), /Position : par défaut \(aucune position de moins de 12 h\)/);
   assert.ok(!envois[0].message.includes('Kiné'));
 });
+
+test("alerte d'essai : titre « [Essai] », envoi immédiat, state.json inchangé", async () => {
+  const f = await etatTemp();
+  for (const id of ['rando', 'voiture', 'air', 'gel']) {
+    await executer({ opts: { essai: id }, env, cheminEtat: f });
+  }
+  assert.deepEqual(envois.map((p) => p.title), ['[Essai] 🥾 Bon moment pour une rando', '[Essai] 🚗 Bon moment pour laver la voiture', '[Essai] 😷 Sport dehors déconseillé', '[Essai] 🥶 Gel cette nuit']);
+  assert.ok(envois.every((p) => p.delay === undefined && !p.message.includes('\n')));
+  await assert.rejects(readFile(f, 'utf8'), /ENOENT/, 'aucun state.json écrit');
+});

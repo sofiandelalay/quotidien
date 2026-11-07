@@ -129,6 +129,7 @@ Règles de départ : **rando** (jeudi soir : samedi et dimanche secs et ≥ 15 �
 
 - Depuis GitHub : Actions → **quotidien** → *Run workflow* → choisir le passage (`matin` ou `soir`), cocher **force**. Tout part immédiatement. Le briefing forcé est un test : il ne compte pas comme celui du jour. Une alerte, en revanche, n'est jamais envoyée deux fois.
 - En ligne de commande : `gh workflow run quotidien.yml -f passage=soir -f force=true`
+- **Alerte d'essai sur l'iPhone** : *Run workflow* → **essai** = `gel` (ou `rando`, `voiture`, `air`), ou `gh workflow run quotidien.yml -f essai=gel`. L'alerte est calculée sur la fixture `test/fixtures/regles/gel-oui.json` et arrive tout de suite, avec un titre commençant par « [Essai] ». Rien n'est noté dans `state.json` : la vraie alerte partira quand même le moment venu.
 - Simulation des règles, sans réseau ni envoi :
   - `npm run simulate` : toutes les fixtures de `test/fixtures/regles/` ;
   - `npm run simulate -- --regle gel` : une seule règle ;
