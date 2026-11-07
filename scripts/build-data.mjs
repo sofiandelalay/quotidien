@@ -12,6 +12,12 @@ async function getJson(url, tries = 4) {
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
       if (res.ok) return await res.json();
+      if (res.status === 429 && i < tries) {
+        const attente = Number(res.headers.get("retry-after")) || 65;
+        console.log(`429 sur ${new URL(url).host}, pause de ${attente} s`);
+        await sleep(attente * 1000);
+        continue;
+      }
       if (i >= tries) throw new Error(`HTTP ${res.status}`);
     } catch (e) {
       if (i >= tries) throw new Error(`${url} : ${e.message}`);
@@ -31,7 +37,7 @@ for (let m = 1; m <= 12; m++) {
     const j = await getJson(`https://nameday.abalin.net/api/V2/date?day=${d}&month=${m}&country=fr`);
     const nom = j?.data?.fr;
     if (nom && nom !== 'n/a') fetes[`${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`] = nom;
-    await sleep(150);
+    await sleep(1100); // limite d'abalin : ~60 requêtes par minute
   }
 }
 await out('fetes.json', { source: 'nameday.abalin.net (API V2, pays fr)', fetes });
