@@ -35,7 +35,7 @@ export function ligneFerie(ferie, jour, horizon) {
 }
 
 /**
- * @param {object} d  données du jour : { jour, commune, meteo, air, ferie, fete, agenda, verset }
+ * @param {object} d  données du jour : { jour, commune, meteo, air, ferie, fete, anniversaires, agenda, verset }
  *                    (chaque champ peut être null si la source a échoué)
  * @param {object} cfg config complète
  * @returns {{titre: string, lignes: string[], message: string}}
@@ -88,7 +88,8 @@ export function composerBriefing(d, cfg) {
   // 5. Fête
   if (d.fete) lignes.push(`Fête : ${d.fete}`);
 
-  // 6. Agenda
+  // 6. Agenda : anniversaires du jour d'abord (hors limite), puis jusqu'à lignes_max lignes
+  for (const l of d.anniversaires ?? []) lignes.push(l);
   for (const l of (d.agenda ?? []).slice(0, cfg.agenda.lignes_max)) lignes.push(l);
 
   // 7. Conseil

@@ -33,3 +33,12 @@ export function decider({ maintenant, reglage, nom, etat, force = false }) {
   const livraison = cible.getTime() - maintenant.getTime() > MARGE_DELAI_MS ? cible : null;
   return { executer: true, raison: livraison ? 'dans la fenêtre' : 'dans la fenêtre (en retard : envoi immédiat)', jour, livraison };
 }
+
+/** Passage dont la fenêtre contient l'heure (déclenchement par le cron, simulation), ou null. */
+export function passageDuMoment(maintenant, cfg) {
+  const m = minutes(paris(maintenant).hhmm);
+  for (const [nom, p] of Object.entries(cfg.passages)) {
+    if (m >= minutes(p.fenetre.debut) && m < minutes(p.fenetre.fin)) return nom;
+  }
+  return null;
+}

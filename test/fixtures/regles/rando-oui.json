@@ -1,0 +1,10 @@
+{
+  "description": "Jeudi 12 novembre, 18h23 : samedi 17° et dimanche 16°, sans pluie → rando",
+  "maintenant": "2026-11-12T17:23:00Z",
+  "jours": [
+    { "date": "2026-11-12", "tmin": 8, "tmax": 13 },
+    { "date": "2026-11-13", "tmin": 9, "tmax": 14 },
+    { "date": "2026-11-14", "tmin": 10, "tmax": 17 },
+    { "date": "2026-11-15", "tmin": 9, "tmax": 16 }
+  ]
+}

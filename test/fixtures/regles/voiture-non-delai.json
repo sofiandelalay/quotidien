@@ -1,0 +1,11 @@
+{
+  "description": "Mardi matin, 48 h sèches, mais une alerte voiture partie vendredi (il y a 4 jours) → délai de 5 jours",
+  "maintenant": "2026-11-10T05:23:00Z",
+  "etat": { "alertes": { "voiture:2026-11-06": "2026-11-06T05:30:00Z" } },
+  "jours": [
+    { "date": "2026-11-10", "tmin": 4, "tmax": 11 },
+    { "date": "2026-11-11", "tmin": 5, "tmax": 12 },
+    { "date": "2026-11-12", "tmin": 6, "tmax": 12 },
+    { "date": "2026-11-13", "tmin": 6, "tmax": 12 }
+  ]
+}

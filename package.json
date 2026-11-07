@@ -8,8 +8,9 @@
     "node": ">=22"
   },
   "scripts": {
-    "start": "node src/main.mjs --passage matin",
-    "simulate": "node src/main.mjs --passage matin --dry-run --force --fixtures test/fixtures/matin",
+    "start": "node src/main.mjs",
+    "simulate": "node src/simuler.mjs",
+    "simulate:briefing": "node src/main.mjs --passage matin --dry-run --force --fixtures test/fixtures/matin",
     "test": "node --test \"test/*.test.mjs\"",
     "check-lock": "node scripts/check-lock.mjs"
   },

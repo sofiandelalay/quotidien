@@ -1,0 +1,87 @@
+# Alertes « bon moment pour… »
+#
+# Chaque règle envoie au plus UNE notification courte (un titre + une ligne) quand ses conditions
+# sont remplies. Une même alerte n'est jamais envoyée deux fois : sa clé « id:date de l'événement »
+# (ex. rando:2026-11-14) est notée dans state/state.json.
+#
+# Vocabulaire (détails et exemples dans le README, section « Écrire une règle ») :
+#   moment       matin (avec le briefing de 7h30) | soir (19h00)
+#   jours        jours de la semaine où la règle est regardée : [lundi, jeudi, …] (tous si absent)
+#   periode      période de l'année, ex. { du: "04-01", au: "10-31" } (toute l'année si absent)
+#   evenement    le jour concerné, qui sert de clé anti-doublon : aujourdhui (par défaut), demain, samedi…
+#   delai_jours  nombre de jours minimum entre deux alertes de cette règle
+#   conditions   liste de conditions, toutes requises ; regrouper avec « tous: » ou « un_des: »
+#                une condition = quand + mesure + un opérateur :
+#                  quand     aujourdhui, demain, lundi … dimanche, nuit (20h → 8h), prochaines_48h
+#                  mesure    temperature_max, temperature_min, ressenti_min, pluie (sec | pluvieux),
+#                            pluie_mm, probabilite_pluie_max, vent_max, rafales_max, uv_max,
+#                            air_indice_max, air (bon, moyen, dégradé, mauvais…)
+#                  opérateur au_moins (≥), au_plus (≤), plus_de (>), moins_de (<), est (=)
+#   titre, message   une ligne chacun ; variables : {quand.mesure} (ex. {samedi.temperature_max}),
+#                    {date} (jour de l'événement, ex. « samedi 14 nov »), {commune}
+#   actif        false pour couper une règle sans l'effacer
+#
+# Les journées vont de 7h à 22h (config.yaml, « journee ») ; « sec » = aucune heure de pluie
+# selon les seuils de config.yaml (« pluie »).
+
+regles:
+
+  # Jeudi soir : le week-end s'annonce sec et doux.
+  - id: rando
+    nom: Rando
+    moment: soir
+    jours: [jeudi]
+    evenement: samedi          # clé : rando:<date du samedi>
+    conditions:
+      - { quand: samedi,   mesure: pluie,           est: sec }
+      - { quand: dimanche, mesure: pluie,           est: sec }
+      - { quand: samedi,   mesure: temperature_max, au_moins: 15 }
+      - { quand: dimanche, mesure: temperature_max, au_moins: 15 }
+    titre: "🥾 Bon moment pour une rando"
+    message: "Ce week-end sec : {samedi.temperature_max}° samedi, {dimanche.temperature_max}° dimanche."
+
+  # Matin : deux jours sans pluie, et pas plus d'une alerte tous les 5 jours.
+  - id: voiture
+    nom: Laver la voiture
+    moment: matin
+    delai_jours: 5
+    conditions:
+      - { quand: prochaines_48h, mesure: pluie, est: sec }
+    titre: "🚗 Bon moment pour laver la voiture"
+    message: "Pas de pluie prévue pendant 48 h."
+
+  # Matin : air dégradé aujourd'hui (indice européen ≥ 60) → éviter l'effort dehors.
+  - id: air
+    nom: "Sport dehors : air dégradé"
+    moment: matin
+    conditions:
+      - { quand: aujourdhui, mesure: air_indice_max, au_moins: 60 }
+    titre: "😷 Sport dehors déconseillé"
+    message: "Air {aujourdhui.air} aujourd'hui (indice {aujourdhui.air_indice_max}) : plutôt du sport en salle."
+
+  # Soir : température négative prévue la nuit suivante.
+  - id: gel
+    nom: Gel
+    moment: soir
+    evenement: demain          # clé : gel:<date de demain>
+    conditions:
+      - { quand: nuit, mesure: temperature_min, moins_de: 0 }
+    titre: "🥶 Gel cette nuit"
+    message: "Jusqu'à {nuit.temperature_min}° : protéger les plantes, pare-brise à couvrir."
+
+  # Exemple à recopier (désactivé) : soirée d'été agréable pour un barbecue demain.
+  - id: barbecue
+    nom: Barbecue
+    actif: false
+    moment: soir
+    periode: { du: "05-01", au: "09-30" }
+    evenement: demain
+    conditions:
+      tous:
+        - { quand: demain, mesure: pluie, est: sec }
+        - { quand: demain, mesure: temperature_max, au_moins: 22 }
+        - un_des:
+            - { quand: demain, mesure: vent_max, au_plus: 20 }
+            - { quand: demain, mesure: rafales_max, au_plus: 35 }
+    titre: "🔥 Bon moment pour un barbecue"
+    message: "Demain {demain.temperature_max}°, sec et peu de vent."

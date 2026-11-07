@@ -1,0 +1,10 @@
+{
+  "description": "Mardi 10 novembre, 6h23 : aucune pluie pendant 48 h → laver la voiture",
+  "maintenant": "2026-11-10T05:23:00Z",
+  "jours": [
+    { "date": "2026-11-10", "tmin": 4, "tmax": 11 },
+    { "date": "2026-11-11", "tmin": 5, "tmax": 12 },
+    { "date": "2026-11-12", "tmin": 6, "tmax": 12 },
+    { "date": "2026-11-13", "tmin": 6, "tmax": 12, "pluie": { "10": 2 } }
+  ]
+}

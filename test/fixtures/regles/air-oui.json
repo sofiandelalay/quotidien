@@ -1,0 +1,11 @@
+{
+  "description": "Mardi matin : indice européen 65 aujourd'hui → sport dehors déconseillé",
+  "maintenant": "2026-11-10T05:23:00Z",
+  "jours": [
+    { "date": "2026-11-10", "tmin": 4, "tmax": 11, "pluie": { "18": 1 } },
+    { "date": "2026-11-11", "tmin": 5, "tmax": 12 },
+    { "date": "2026-11-12", "tmin": 6, "tmax": 12 },
+    { "date": "2026-11-13", "tmin": 6, "tmax": 12 }
+  ],
+  "air": { "2026-11-10": 65 }
+}

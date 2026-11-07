@@ -3,6 +3,9 @@
 # Températures en °C, vent en km/h, pluie en mm, heures en heure de Paris.
 
 position:
+  # Le Raccourci iOS publie « lat,lon » sur le sujet ntfy privé ; on prend le dernier message
+  # de moins de max_age_heures (ntfy.sh ne garde pas les messages plus de 12 h).
+  max_age_heures: 12
   # Position utilisée quand le Raccourci iOS n'a rien publié récemment.
   defaut:
     nom: Lille
@@ -15,6 +18,11 @@ passages:
     fenetre:                  # le script ne fait rien en dehors de cette plage (heure de Paris)
       debut: "05:00"
       fin: "09:30"            # après l'heure d'envoi mais avant la fin : envoi immédiat (retard du cron)
+  soir:                       # alertes du soir (rules.yaml, « moment: soir »)
+    heure_envoi: "19:00"
+    fenetre:
+      debut: "16:00"
+      fin: "21:30"
 
 journee:                      # heures prises en compte pour la pluie, le vent, l'air et les pollens
   debut: 7                    # de 7h…
@@ -81,8 +89,28 @@ notification:
   lien: ""                    # adresse de la page de détail (ajoutée quand la page existera)
 
 agenda:
-  detail: titres              # titres | nombre
-  lignes_max: 3
+  # Liens ICS : secret GitHub CALENDAR_URLS, une ligne « libellé|url_ics » par agenda.
+  # Les événements ne vont que dans la notification (jamais sur la page, dans un log ou un fichier).
+  detail: titres              # titres (« 14h Dentiste ») | nombre (« Agenda : 2 aujourd'hui, 1 demain matin »)
+  lignes_max: 3               # lignes d'agenda au plus (les anniversaires ne comptent pas)
+  demain_matin_jusqua: "12:00" # après aujourd'hui, on montre demain jusqu'à cette heure
+  longueur_titre: 40          # titres plus longs coupés par « … »
+  # Filtre « hors travail » :
+  ignorer_agendas: []         # libellés d'agendas entiers à ignorer, ex. [Travail]
+  ignorer_mots_cles:          # événements dont le titre contient un de ces mots (sans tenir compte des accents ni des majuscules)
+    - réunion
+    - teams
+    - visio
+    - point hebdo
+    - comité
+    - sprint
+    - standup
+    - meeting
+  anniversaires:
+    actif: true               # false : les anniversaires ne sont pas affichés
+    # Agendas dont tous les événements « toute la journée » sont des anniversaires
+    # (en plus des événements dont le titre contient « anniversaire »).
+    agendas: [Anniversaires, Birthdays]
 
 state:
   purge_jours: 14             # les entrées de state/state.json plus vieilles sont supprimées

@@ -1,0 +1,10 @@
+{
+  "description": "Samedi 7 novembre, 18h23 : −2° prévus dimanche à 6h → gel",
+  "maintenant": "2026-11-07T17:23:00Z",
+  "jours": [
+    { "date": "2026-11-07", "tmin": 3, "tmax": 8 },
+    { "date": "2026-11-08", "tmin": -2, "tmax": 6 },
+    { "date": "2026-11-09", "tmin": 1, "tmax": 7 },
+    { "date": "2026-11-10", "tmin": 2, "tmax": 8 }
+  ]
+}
