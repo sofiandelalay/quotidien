@@ -1,0 +1,28 @@
+name: diagnostic
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Masquer les secrets
+        env:
+          NTFY_TOPIC_BRIEFING: ${{ secrets.NTFY_TOPIC_BRIEFING }}
+          NTFY_TOPIC_POSITION: ${{ secrets.NTFY_TOPIC_POSITION }}
+        run: |
+          echo "::add-mask::$NTFY_TOPIC_BRIEFING"
+          echo "::add-mask::$NTFY_TOPIC_POSITION"
+      - name: Appeler chaque source
+        env:
+          NTFY_TOPIC_POSITION: ${{ secrets.NTFY_TOPIC_POSITION }}
+        run: node scripts/diagnostic.mjs
