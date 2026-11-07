@@ -102,6 +102,7 @@ export function composerAgenda(agendas, jour, cfg) {
         }
         continue;
       }
+      if (cfg.ignorer_visio && o.visio) continue; // réunion Teams, Zoom, Meet…
       if (motsCles.some((m) => contientMot(o.titre, m))) continue;
       const cle = `${normaliser(o.titre)}|${o.journee ? o.dateDebut : o.debut.getTime()}`;
       if (vus.has(cle)) continue; // même événement dans deux agendas

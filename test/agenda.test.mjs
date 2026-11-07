@@ -24,24 +24,25 @@ test('CALENDAR_URLS : « libellé|url », webcal, lignes vides et commentaires',
   assert.deepEqual(lireCalendarUrls(undefined), []);
 });
 
-test('filtre hors travail par mots-clés (accents et majuscules ignorés), anniversaires à part', () => {
+test('filtre : réunions en visio et mots-clés (accents et majuscules ignorés), anniversaires à part', () => {
   const c = avec({ agenda: { lignes_max: 10 } });
   const { anniversaires, lignes } = composerAgenda(agendas(c.agenda), jour, c.agenda);
   assert.deepEqual(anniversaires, ['🎂 Anniversaire de Léa', '🎂 Anniversaire de Marie', "🎂 Anniversaire d'Alice Martin"]);
   assert.deepEqual(lignes, [
     "Aujourd'hui : Brocante du quartier",
     '10h Kiné',
+    '14h Atelier client', // pro, en présentiel : gardé
     '18h Appel avec Montréal',
     '18h15 Ciné',
     '18h30 Piscine',
     '20h Dîner chez Mamie, Papa et les cousins…', // coupé à la fin d'un mot
     'Demain 8h30 Contrôle technique',
-  ]); // « Réunion d'équipe » et « Point projet sur TEAMS » filtrés ; « Coiffeur » demain 14h : trop tard
+  ]); // filtrés : « Réunion d'équipe » (lieu Teams), « Point budget » (lien Zoom), « Point projet sur TEAMS » (titre) ; « Coiffeur » demain 14h : trop tard
 });
 
 test('jusqu\'à 3 lignes, au-delà « + N autres » ; anniversaires en tête et hors limite', () => {
   const { anniversaires, lignes } = composerAgenda(agendas(), jour, cfg.agenda);
-  assert.deepEqual(lignes, ["Aujourd'hui : Brocante du quartier", '10h Kiné', '+ 5 autres événements']);
+  assert.deepEqual(lignes, ["Aujourd'hui : Brocante du quartier", '10h Kiné', '+ 6 autres événements']);
   assert.equal(anniversaires.length, 3);
   const b = composerBriefing({ jour, commune: 'Lille', meteo: null, air: null, ferie: null, fete: null, anniversaires, agenda: lignes }, cfg);
   assert.deepEqual(b.lignes.slice(1), [...anniversaires, ...lignes]);
@@ -50,7 +51,7 @@ test('jusqu\'à 3 lignes, au-delà « + N autres » ; anniversaires en tête et 
 test('agenda.detail: nombre — une seule ligne, les anniversaires restent affichés', () => {
   const c = avec({ agenda: { detail: 'nombre' } });
   const { anniversaires, lignes } = composerAgenda(agendas(c.agenda), jour, c.agenda);
-  assert.deepEqual(lignes, ["Agenda : 6 aujourd'hui, 1 demain matin"]);
+  assert.deepEqual(lignes, ["Agenda : 7 aujourd'hui, 1 demain matin"]);
   assert.equal(anniversaires.length, 3);
 });
 
@@ -98,4 +99,10 @@ test("un agenda en panne n'empêche pas les autres ; l'erreur ne contient pas l'
   assert.equal(a[1].occurrences.length, 3);
   assert.deepEqual(echecs, ['agenda « Outlook » (HTTP 404)']);
   assert.ok(!echecs.join().includes('SECRET123'));
+});
+
+test('visio : ignorer_visio à false montre les réunions Teams et Zoom', () => {
+  const c = avec({ agenda: { ignorer_visio: false, ignorer_mots_cles: [], lignes_max: 20 } });
+  const { lignes } = composerAgenda(agendas(c.agenda), jour, c.agenda);
+  for (const t of ["9h Réunion d'équipe", '16h Point budget', '15h Point projet sur TEAMS']) assert.ok(lignes.includes(t), t);
 });

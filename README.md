@@ -100,7 +100,7 @@ Les liens ne sont écrits nulle part ailleurs. Pour vérifier, lancez le workflo
 Ce que fait ensuite le script :
 - Récurrences, exceptions et fuseaux Windows d'Outlook (« Romance Standard Time »…) sont gérés.
 - Le briefing affiche jusqu'à 3 lignes : aujourd'hui, puis demain jusqu'à midi (`10h Kiné`, `Demain 8h30 Contrôle technique`, `+ 2 autres événements`). Avec `agenda.detail: nombre`, une seule ligne s'affiche : `Agenda : 2 aujourd'hui, 1 demain matin`.
-- **Hors travail** : `agenda.ignorer_agendas` ignore des agendas entiers ; `agenda.ignorer_mots_cles` ignore les événements dont le titre contient un de ces mots (réunion, teams…).
+- **Réunions en visio masquées** (`agenda.ignorer_visio: true`) : Teams, Zoom, Google Meet, Webex… Elles sont repérées par leur lieu (« Réunion Microsoft Teams »), le lien dans la description, ou les mots « teams » et « visio » dans le titre (`agenda.ignorer_mots_cles`). Les rendez-vous en présentiel, y compris professionnels, restent affichés. `agenda.ignorer_agendas` permet d'ignorer un agenda entier.
 - **Anniversaires** : sont traités comme anniversaires les événements « toute la journée » d'un agenda listé dans `agenda.anniversaires.agendas`, ou dont le titre contient « anniversaire ». Ils sont affichés le jour même (`🎂 Anniversaire de Marie`), en tête de l'agenda et hors de la limite de 3 lignes, y compris avec `detail: nombre`. Pour les couper : `agenda.anniversaires.actif: false`.
 - Les événements ne vont que dans la notification : jamais dans un log, un fichier, un commit ni la page.
 

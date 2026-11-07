@@ -104,15 +104,10 @@ agenda:
   longueur_titre: 40          # titres plus longs coupés par « … »
   # Filtre « hors travail » :
   ignorer_agendas: []         # libellés d'agendas entiers à ignorer, ex. [Travail]
+  ignorer_visio: true         # réunions en visio (Teams, Zoom, Meet, Webex…) : repérées par leur lieu, leur lien ou leur titre
   ignorer_mots_cles:          # événements dont le titre contient un de ces mots (sans tenir compte des accents ni des majuscules)
-    - réunion
     - teams
     - visio
-    - point hebdo
-    - comité
-    - sprint
-    - standup
-    - meeting
   anniversaires:
     actif: true               # false : les anniversaires ne sont pas affichés
     # Agendas dont tous les événements « toute la journée » sont des anniversaires

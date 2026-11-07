@@ -163,9 +163,26 @@ export function lireIcs(texte) {
       case 'RECURRENCE-ID': courant.recurrenceId = lireDate(valeur, params); break;
       case 'STATUS': courant.statut = valeur.trim().toUpperCase(); break;
       case 'TRANSP': courant.transparent = valeur.trim().toUpperCase() === 'TRANSPARENT'; break;
+      case 'LOCATION': courant.lieu = texteIcs(valeur); break;
+      case 'DESCRIPTION': courant.indicesVisio = (courant.indicesVisio ?? '') + ' ' + valeur.slice(0, 20000); break;
+      case 'URL': courant.indicesVisio = (courant.indicesVisio ?? '') + ' ' + valeur; break;
+      case 'X-MICROSOFT-SKYPETEAMSMEETINGURL':
+      case 'X-MICROSOFT-ONLINEMEETINGCONFLINK':
+      case 'X-GOOGLE-CONFERENCE':
+        courant.visioExplicite = true;
+        break;
     }
   }
   return evenements;
+}
+
+// --- Visioconférences ---------------------------------------------------------------------
+
+const VISIO = /teams\.microsoft\.com|teams\.live\.com|meet\.google\.com|zoom\.us|webex\.com|whereby\.com|gotomeeting\.com|meet\.jit\.si|\bmicrosoft teams\b|r[ée]union teams\b|\bteams meeting\b/i;
+
+/** Réunion en visio : champ dédié, ou lien / mention Teams, Zoom, Meet, Webex… dans le lieu ou la description. */
+export function estVisio(e) {
+  return Boolean(e.visioExplicite) || VISIO.test(`${e.lieu ?? ''} ${e.indicesVisio ?? ''}`);
 }
 
 // --- Récurrences ----------------------------------------------------------------------------
@@ -289,6 +306,7 @@ export function occurrences(evenements, fenetre) {
     if (e.statut === 'CANCELLED') continue;
     const journee = !e.debut.heure; // DTSTART;VALUE=DATE (Outlook et Google l'utilisent pour « toute la journée »)
     const titre = e.titre || '(sans titre)';
+    const visio = estVisio(e);
 
     // Durée de l'événement
     let dureeMs;
@@ -321,7 +339,7 @@ export function occurrences(evenements, fenetre) {
         const debutF = dans(FUSEAU, fenetre.debut).date;
         const finF = dans(FUSEAU, new Date(fenetre.fin.getTime() - 1)).date;
         if (dateFin <= debutF || d > finF) continue;
-        res.push({ titre, journee: true, dateDebut: d, dateFin, debut: instantDans(FUSEAU, d, '00:00'), fin: instantDans(FUSEAU, dateFin, '00:00') });
+        res.push({ titre, journee: true, visio, dateDebut: d, dateFin, debut: instantDans(FUSEAU, d, '00:00'), fin: instantDans(FUSEAU, dateFin, '00:00') });
       } else {
         const debut = instantDans(e.debut.fuseau, d, e.debut.heure);
         const cle = String(debut.getTime());
@@ -329,7 +347,7 @@ export function occurrences(evenements, fenetre) {
         const fin = new Date(debut.getTime() + dureeMs);
         if (fin <= fenetre.debut && dureeMs > 0) continue;
         if (debut >= fenetre.fin || (dureeMs <= 0 && debut < fenetre.debut)) continue;
-        res.push({ titre, journee: false, debut, fin });
+        res.push({ titre, journee: false, visio, debut, fin });
       }
     }
   }

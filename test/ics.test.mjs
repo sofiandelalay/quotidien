@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { lireIcs, lireLignes, occurrences, resoudreFuseau, datesRecurrence, lireRrule } from '../src/ics.mjs';
+import { lireIcs, lireLignes, occurrences, resoudreFuseau, datesRecurrence, lireRrule, estVisio } from '../src/ics.mjs';
 import { instantParis, paris } from '../src/temps.mjs';
 
 const ics = (nom) => readFileSync(new URL(`./fixtures/agenda/${nom}`, import.meta.url), 'utf8');
@@ -34,7 +34,9 @@ test('Outlook, lundi 9 novembre 2026 : récurrences, fuseaux, annulation', () =>
     '[journée] Brocante du quartier',
     "09:00 Réunion d'équipe", // W. Europe Standard Time 9h = 9h à Paris
     '10:00 Kiné', // créé en septembre (heure d'été), toujours 10h en hiver
+    '14:00 Atelier client',
     '15:00 Point projet sur TEAMS',
+    '16:00 Point budget',
     '18:00 Appel avec Montréal', // fuseau inconnu : heure lue comme heure de Paris
     '20:00 Dîner chez Mamie, Papa et les cousins (apporter le dessert)', // 2e lundi du mois
   ]); // Yoga de 19h : occurrence annulée (RECURRENCE-ID + STATUS:CANCELLED)
@@ -80,4 +82,13 @@ test('RRULE : rangs, BYSETPOS, fin de mois, 29 février, intervalle, COUNT', () 
   assert.deepEqual(datesRecurrence(r('FREQ=WEEKLY;INTERVAL=2;BYDAY=TU,TH'), '2026-11-03', '2026-11-20'), ['2026-11-03', '2026-11-05', '2026-11-17', '2026-11-19']);
   assert.deepEqual(datesRecurrence(r('FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU'), '2025-03-30', '2027-12-31'), ['2025-03-30', '2026-03-29', '2027-03-28']);
   assert.deepEqual(datesRecurrence(r('FREQ=DAILY;INTERVAL=3;COUNT=3'), '2026-11-01', '2026-12-31'), ['2026-11-01', '2026-11-04', '2026-11-07']);
+});
+
+test('réunions en visio repérées par le lieu, le lien (même plié) ou un champ dédié', () => {
+  const occ = occurrences(lireIcs(ics('outlook.ics')), jour('2026-11-09'));
+  const visio = occ.filter((o) => o.visio).map((o) => o.titre).sort();
+  assert.deepEqual(visio, ['Point budget', "Réunion d'équipe"]);
+  assert.equal(estVisio({ visioExplicite: true }), true);
+  assert.equal(estVisio({ lieu: 'Salle Teams-Vert' }), false, 'pas de faux positif sur un nom de salle');
+  assert.equal(estVisio({ indicesVisio: 'https://meet.google.com/abc-defg-hij' }), true);
 });

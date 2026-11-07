@@ -143,8 +143,8 @@ test('position du Raccourci utilisée ; logs sans sujet, position, lien ni évé
   const briefing = envois.find((p) => p.title.includes('Marseille'));
   assert.ok(briefing, 'commune de la position du Raccourci');
   assert.ok(urls.some((u) => u.includes('latitude=43.3000&longitude=5.3700')), 'météo à la position du Raccourci');
-  assert.match(briefing.message, /Aujourd'hui : Brocante du quartier\n10h Kiné\n\+ 3 autres événements/);
-  assert.ok(!briefing.message.includes('Réunion'), 'filtre hors travail');
+  assert.match(briefing.message, /Aujourd'hui : Brocante du quartier\n10h Kiné\n\+ 4 autres événements/);
+  assert.ok(!briefing.message.includes('Réunion'), 'réunion Teams filtrée');
 
   const logs = journal.join('\n');
   for (const interdit of [SUJET, SUJET_POS, ICS_URL, '00000000SECRET', '43.3', '43,3', '5.37', 'Marseille', 'Kiné', 'Brocante', 'Dîner']) {
