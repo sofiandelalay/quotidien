@@ -19,6 +19,12 @@ export function emojiMeteo(code, pluie) {
 
 const majuscule = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
+/** [créneau le plus long] (le premier à durée égale), ou [] s'il n'y en a pas. */
+export function creneauPrincipal(creneaux) {
+  if (!creneaux.length) return [];
+  return [creneaux.reduce((a, c) => (c.fin - c.debut > a.fin - a.debut ? c : a))];
+}
+
 export function ligneFerie(ferie, jour, horizon) {
   if (!ferie) return null;
   const n = ecartJours(jour, ferie.date);
@@ -41,8 +47,9 @@ export function composerBriefing(d, cfg) {
   // 1. Titre
   let titre;
   if (m) {
-    const premier = m.creneaux.length && m.creneaux.length <= cfg.pluie.creneaux_max ? texteCreneaux(m.creneaux.slice(0, 1), 1) : pluie;
-    titre = `${emojiMeteo(m.code, m.creneaux.length > 0)} ${d.commune} ${deg(m.min)}–${deg(m.max)}°${premier ? ` · pluie ${premier}` : ''}`;
+    // Dans le titre, un seul créneau : le plus long (le plus tôt à durée égale).
+    const principal = m.creneaux.length > cfg.pluie.creneaux_max ? pluie : texteCreneaux(creneauPrincipal(m.creneaux), 1);
+    titre = `${emojiMeteo(m.code, m.creneaux.length > 0)} ${d.commune} ${deg(m.min)}–${deg(m.max)}°${principal ? ` · pluie ${principal}` : ''}`;
   } else {
     titre = `${d.commune} · météo indisponible`;
   }

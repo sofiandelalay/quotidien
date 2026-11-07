@@ -51,6 +51,16 @@ test('sources en panne : lignes omises, le briefing part quand même', () => {
   assert.deepEqual(b.lignes, ['Air : indisponible']);
 });
 
+test('titre : le créneau de pluie le plus long, tous dans la ligne pluie', () => {
+  const b = composerBriefing({ ...base, meteo: { ...meteo, creneaux: [{ debut: 8, fin: 9 }, { debut: 11, fin: 21 }] } }, cfg);
+  assert.equal(b.titre, '☂️ Lille 6–12° · pluie 11h–21h');
+  assert.match(b.lignes[0], /^Pluie 8h–9h, 11h–21h/);
+  const egal = composerBriefing({ ...base, meteo: { ...meteo, creneaux: [{ debut: 8, fin: 10 }, { debut: 15, fin: 17 }] } }, cfg);
+  assert.equal(egal.titre, '☂️ Lille 6–12° · pluie 8h–10h');
+  const beaucoup = composerBriefing({ ...base, meteo: { ...meteo, creneaux: [8, 11, 14, 17].map((h) => ({ debut: h, fin: h + 1 })) } }, cfg);
+  assert.equal(beaucoup.titre, '☂️ Lille 6–12° · pluie par moments');
+});
+
 test('agenda limité à 3 lignes, avant le conseil', () => {
   const b = composerBriefing({ ...base, agenda: ['a', 'b', 'c', 'd'] }, cfg);
   assert.deepEqual(b.lignes.slice(-4), ['a', 'b', 'c', 'Parapluie conseillé (pluie 14h–17h).']);
