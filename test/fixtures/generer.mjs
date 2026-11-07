@@ -51,7 +51,6 @@ const f = (date, localName) => ({ date, localName, name: localName, countryCode:
 ecrire('feries-2026.json', [f('2026-01-01', "Jour de l'an"), f('2026-11-01', 'Toussaint'), f('2026-11-11', 'Armistice 1918'), f('2026-12-25', 'Noël')]);
 ecrire('feries-2027.json', [f('2027-01-01', "Jour de l'an")]);
 ecrire('commune.json', [{ nom: 'Lille' }]);
-ecrire('fete.json', { success: true, message: 'Namedays for 11-07', data: { fr: 'Carine', de: 'Carina' } });
 ecrire('verset.json', {
   code: 200, status: 'OK',
   data: [

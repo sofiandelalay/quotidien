@@ -1,6 +1,6 @@
 # Sources de données
 
-Validées le 7 novembre 2026 par le workflow `diagnostic` (GitHub Actions, run 42370600486, lu avec `gh run view --log`).
+Validées le 7 novembre 2026 par le workflow `diagnostic` (GitHub Actions, run 42370600486, lu avec `gh run view --log`) ; données statiques construites par le workflow `donnees` (run 42371264455).
 Toutes sont gratuites et sans clé. Coordonnées de test : Lille (50.6292, 3.0573).
 
 | Donnée | Source retenue | Repli | État |
@@ -9,7 +9,7 @@ Toutes sont gratuites et sans clé. Coordonnées de test : Lille (50.6292, 3.057
 | Air et pollens | Open-Meteo Air Quality | « Air : indisponible » | ✅ 200, ~0,7 s |
 | Jours fériés | Nager.Date v3 | calendrier.api.gouv.fr | ✅ les deux |
 | Commune | geo.api.gouv.fr | « Ma position » (« Lille » pour la position par défaut) | ✅ |
-| Fête du jour | nameday.abalin.net **API V2** | `data/fetes.json` (copie statique) | ✅ V2 en GET ; V1 en 404 ; V2 en POST en 405 |
+| Fête du jour | **`data/fetes.json`** (copie corrigée d'abalin) | — | ⚠️ API V2 joignable, mais données françaises peu fiables → fichier statique |
 | Verset | AlQuran Cloud | ligne omise | ✅ |
 | Hadith | fawazahmed0/hadith-api (jsDelivr), copié dans `data/nawawi-fr.json` | — (copie locale) | ✅ |
 | Notifications | ntfy.sh | — | ✅ |
@@ -84,8 +84,17 @@ GET https://nameday.abalin.net/api/V2/date?day=7&month=11&country=fr
 
 - `GET /api/V2/today?country=fr&timezone=Europe/Paris` marche aussi. On préfère `date`, qui ne dépend pas de l'heure du serveur.
 - **API V1 supprimée** (404) ; `POST /api/V2/today` → 405.
-- **Limite de débit : environ 60 requêtes par minute** (HTTP 429 à la 61ᵉ). Ce n'est pas gênant pour une requête par jour.
-- Repli : `data/fetes.json` (`{ fetes: { "11-07": "Carine", … } }`), construit une fois par le workflow `donnees`.
+- **Limite de débit : environ 60 requêtes par minute** (HTTP 429 à la 61ᵉ).
+- **Données françaises peu fiables** : elles recopient un calendrier imprimé de 2018. On y trouve :
+  - des fêtes mobiles figées aux dates de 2018 (« Pâques » le 1er avril, « Ascension » le 10 mai, « F. des Mères » le 27 mai) ;
+  - des abréviations (« Cath. de Suè. », « Thér. de l'E. ») ;
+  - des phases de lune (« Basile Pleine ») et des changements d'heure (« Rameaux +1h », « Simon, Jude -1h »).
+- **Source retenue : `data/fetes.json`** (`{ fetes: { "11-07": "Carine", … } }`, 352 jours). Le workflow `donnees` le construit une fois depuis l'API V2, puis `scripts/fetes-corrections.mjs` le corrige :
+  - noms développés ;
+  - prénom du calendrier à la place des fêtes mobiles de 2018 (1er avril Hugues, 14 février Valentin…) ;
+  - jours sans prénom supprimés (Toussaint, Défunts…).
+  L'API n'est plus appelée chaque jour.
+- Jour absent du fichier (29 février, fêtes sans prénom) : la ligne « Fête » est omise.
 
 ## Verset — AlQuran Cloud
 

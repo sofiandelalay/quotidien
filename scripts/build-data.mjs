@@ -4,6 +4,7 @@
 //  - data/versets-courts.json : références des versets courts (sélection déterministe par date)
 // Lancé depuis GitHub Actions (workflow « donnees »), jamais depuis le PC.
 import { writeFile, mkdir } from 'node:fs/promises';
+import { corrigerFetes } from './fetes-corrections.mjs';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -40,8 +41,10 @@ for (let m = 1; m <= 12; m++) {
     await sleep(1100); // limite d'abalin : ~60 requêtes par minute
   }
 }
-await out('fetes.json', { source: 'nameday.abalin.net (API V2, pays fr)', fetes });
-console.log(`fetes.json : ${Object.keys(fetes).length} jours`);
+const { fetes: corrigees, suspectes } = corrigerFetes(fetes);
+if (suspectes.length) console.log(`::warning::fêtes à vérifier : ${JSON.stringify(suspectes)}`);
+await out('fetes.json', { source: 'nameday.abalin.net (API V2, pays fr), corrigé par scripts/fetes-corrections.mjs', fetes: corrigees });
+console.log(`fetes.json : ${Object.keys(corrigees).length} jours`);
 
 // --- Hadiths de Nawawi -----------------------------------------------------------
 const nawawi = await getJson('https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/fra-nawawi.min.json');

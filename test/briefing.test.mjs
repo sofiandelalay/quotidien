@@ -87,3 +87,15 @@ test('message ntfy JSON : champ delay en horodatage Unix pour 7h30 Paris', () =>
   assert.equal(p.delay, String(Date.parse('2026-11-07T06:30:00Z') / 1000));
   assert.equal(construireMessage({ topic: 't', titre: 'x', message: 'y' }).delay, undefined);
 });
+
+test('données statiques : fêtes corrigées, hadiths numérotés, versets courts', async () => {
+  const { fete, hadith } = await import('../src/sources.mjs');
+  assert.equal(await fete('2026-11-07'), 'Carine');
+  assert.equal(await fete('2027-04-01'), 'Hugues', 'pas « Pâques » figé à 2018');
+  assert.equal(await fete('2026-11-01'), null, 'Toussaint : pas de prénom, ligne omise');
+  const h = await hadith('2026-11-07');
+  assert.ok(h.numero >= 1 && h.numero <= 42 && h.texte.length > 20 && h.source);
+  const { readFileSync } = await import('node:fs');
+  const { refs } = JSON.parse(readFileSync(new URL('../data/versets-courts.json', import.meta.url), 'utf8'));
+  assert.ok(refs.length > 1000 && refs.every((r) => /^\d+:\d+$/.test(r)));
+});

@@ -84,18 +84,14 @@ export async function commune(pos, get = getJson) {
   return l[0]?.nom ?? null;
 }
 
-/** Fête du jour : nameday.abalin.net (API V2), repli sur data/fetes.json. */
-export async function fete(jour, get = getJson) {
-  const [, m, j] = jour.split('-').map(Number);
-  try {
-    const r = await get(`https://nameday.abalin.net/api/V2/date?day=${j}&month=${m}&country=fr`, { delai: 8000 });
-    const nom = r?.data?.fr;
-    if (nom && nom !== 'n/a') return nom;
-    throw new Error('réponse vide');
-  } catch {
-    const { fetes } = await lireData('fetes.json');
-    return fetes[jour.slice(5)] ?? null;
-  }
+/**
+ * Fête du jour : data/fetes.json (copie corrigée d'abalin, cf. docs/sources.md).
+ * L'API d'abalin n'est plus appelée chaque jour : ses données françaises figent les fêtes
+ * mobiles aux dates de 2018 et contiennent des abréviations. null = pas de prénom ce jour-là.
+ */
+export async function fete(jour) {
+  const { fetes } = await lireData('fetes.json');
+  return fetes[jour.slice(5)] ?? null;
 }
 
 /** Verset court du jour (sélection déterministe) : { ar, fr, ref, sourate }. */

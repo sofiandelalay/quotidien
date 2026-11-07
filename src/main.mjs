@@ -41,7 +41,6 @@ function lecteurFixtures(dossier) {
     [/\/\/api\.open-meteo\.com/, 'prevision.json'],
     [/date\.nager\.at.*\/(\d{4})\/FR/, (m) => `feries-${m[1]}.json`],
     [/geo\.api\.gouv\.fr/, 'commune.json'],
-    [/nameday\.abalin\.net/, 'fete.json'],
     [/alquran\.cloud/, 'verset.json'],
   ];
   return async (url) => {
@@ -61,7 +60,7 @@ async function passageMatin({ cfg, jour, get }) {
     sur('air', src.qualiteAir(pos, get), echecs),
     sur('fériés', src.prochainFerie(jour, get), echecs),
     sur('commune', src.commune(pos, get), echecs),
-    sur('fête', src.fete(jour, get), echecs),
+    sur('fête', src.fete(jour), echecs),
     sur('verset', src.verset(jour, get), echecs),
     sur('hadith', src.hadith(jour), echecs),
   ]);
