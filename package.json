@@ -1,0 +1,19 @@
+{
+  "name": "quotidien",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Briefing du matin et alertes « bon moment pour… » envoyés par ntfy",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/main.mjs --passage matin",
+    "simulate": "node src/main.mjs --passage matin --dry-run --force --fixtures test/fixtures/matin",
+    "test": "node --test \"test/*.test.mjs\"",
+    "check-lock": "node scripts/check-lock.mjs"
+  },
+  "dependencies": {
+    "yaml": "2.9.1"
+  }
+}

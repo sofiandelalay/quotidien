@@ -1,0 +1,15 @@
+[
+ {
+  "date": "2027-01-01",
+  "localName": "Jour de l'an",
+  "name": "Jour de l'an",
+  "countryCode": "FR",
+  "fixed": false,
+  "global": true,
+  "counties": null,
+  "launchYear": null,
+  "types": [
+   "Public"
+  ]
+ }
+]

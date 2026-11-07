@@ -1,0 +1,32 @@
+{
+ "code": 200,
+ "status": "OK",
+ "data": [
+  {
+   "number": 6222,
+   "text": "إِنَّ مَعَ ٱلْعُسْرِ يُسْرًا",
+   "edition": {
+    "identifier": "quran-uthmani"
+   },
+   "surah": {
+    "number": 94,
+    "name": "سُورَةُ الشَّرۡحِ",
+    "englishName": "Ash-Sharh"
+   },
+   "numberInSurah": 6
+  },
+  {
+   "number": 6222,
+   "text": "à côté de la difficulté, est certes, une facilité!",
+   "edition": {
+    "identifier": "fr.hamidullah"
+   },
+   "surah": {
+    "number": 94,
+    "name": "سُورَةُ الشَّرۡحِ",
+    "englishName": "Ash-Sharh"
+   },
+   "numberInSurah": 6
+  }
+ ]
+}

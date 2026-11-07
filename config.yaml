@@ -1,0 +1,88 @@
+# Configuration de « quotidien ».
+# Tous les seuils sont ici : on peut les modifier depuis l'appli GitHub de l'iPhone.
+# Températures en °C, vent en km/h, pluie en mm, heures en heure de Paris.
+
+position:
+  # Position utilisée quand le Raccourci iOS n'a rien publié récemment.
+  defaut:
+    nom: Lille
+    lat: 50.6292
+    lon: 3.0573
+
+passages:
+  matin:
+    heure_envoi: "07:30"      # heure à laquelle la notification arrive (livraison différée ntfy)
+    fenetre:                  # le script ne fait rien en dehors de cette plage (heure de Paris)
+      debut: "05:00"
+      fin: "09:30"            # après l'heure d'envoi mais avant la fin : envoi immédiat (retard du cron)
+
+journee:                      # heures prises en compte pour la pluie, le vent, l'air et les pollens
+  debut: 7                    # de 7h…
+  fin: 22                     # …à 22h (exclu)
+
+pluie:
+  seuil_mm: 0.2               # une heure est « pluvieuse » si la pluie prévue atteint ce cumul…
+  seuil_probabilite: 60       # …ou si la probabilité de pluie atteint ce pourcentage
+  fusion_trou_heures: 1       # deux créneaux séparés d'une heure sèche au plus sont regroupés
+  creneaux_max: 3             # au-delà, on écrit « pluie par moments »
+
+vent:
+  rafales_affichees: 50       # les rafales sont indiquées à partir de cette vitesse
+
+uv:
+  affiche_a_partir_de: 3      # l'indice UV est indiqué à partir de cette valeur
+
+air:
+  # Indice européen de qualité de l'air (european_aqi) → mot affiché. Chaque niveau vaut jusqu'à « max » (exclu).
+  niveaux:
+    - { max: 20, mot: bon }
+    - { max: 40, mot: moyen }
+    - { max: 60, mot: dégradé }
+    - { max: 80, mot: mauvais }
+    - { max: 100, mot: très mauvais }
+    - { max: 9999, mot: extrêmement mauvais }
+
+pollens:
+  # Un pollen n'est cité que si son maximum de la journée atteint ce seuil (grains/m³).
+  # Hors saison les valeurs sont nulles : rien n'est affiché.
+  seuils:
+    aulne: 50
+    bouleau: 50
+    graminees: 30
+    armoise: 30
+    olivier: 50
+    ambroisie: 20
+
+feries:
+  horizon_jours: 60           # le prochain jour férié n'est cité que s'il tombe dans ce délai
+
+conseil:
+  # Un seul conseil par jour, le premier de cette liste dont la condition est remplie. Aucun sinon.
+  priorite: [air_mauvais, vent_fort, gel, parapluie, manteau, creme_solaire]
+  air_mauvais:
+    indice: 80                # indice européen maximal de la journée
+  vent_fort:
+    rafales: 70               # rafales maximales de la journée
+  gel:
+    temperature: 0            # température minimale entre « heures »…
+    heures: [5, 10]           # …de 5h à 10h (exclu), le moment où l'on part
+  parapluie:
+    cumul_mm: 1               # cumul de pluie sur la journée…
+    probabilite: 70           # …ou probabilité maximale sur la journée
+  manteau:
+    ressenti: 3               # ressenti minimal entre « heures »
+    heures: [7, 10]
+  creme_solaire:
+    uv: 6                     # indice UV maximal de la journée
+
+notification:
+  verset: false               # le verset et le hadith sont sur la page, pas dans la notification
+  priorite: 3                 # priorité ntfy (1 = min, 3 = normale, 5 = max)
+  lien: ""                    # adresse de la page de détail (ajoutée quand la page existera)
+
+agenda:
+  detail: titres              # titres | nombre
+  lignes_max: 3
+
+state:
+  purge_jours: 14             # les entrées de state/state.json plus vieilles sont supprimées

@@ -1,0 +1,54 @@
+[
+ {
+  "date": "2026-01-01",
+  "localName": "Jour de l'an",
+  "name": "Jour de l'an",
+  "countryCode": "FR",
+  "fixed": false,
+  "global": true,
+  "counties": null,
+  "launchYear": null,
+  "types": [
+   "Public"
+  ]
+ },
+ {
+  "date": "2026-11-01",
+  "localName": "Toussaint",
+  "name": "Toussaint",
+  "countryCode": "FR",
+  "fixed": false,
+  "global": true,
+  "counties": null,
+  "launchYear": null,
+  "types": [
+   "Public"
+  ]
+ },
+ {
+  "date": "2026-11-11",
+  "localName": "Armistice 1918",
+  "name": "Armistice 1918",
+  "countryCode": "FR",
+  "fixed": false,
+  "global": true,
+  "counties": null,
+  "launchYear": null,
+  "types": [
+   "Public"
+  ]
+ },
+ {
+  "date": "2026-12-25",
+  "localName": "Noël",
+  "name": "Noël",
+  "countryCode": "FR",
+  "fixed": false,
+  "global": true,
+  "counties": null,
+  "launchYear": null,
+  "types": [
+   "Public"
+  ]
+ }
+]

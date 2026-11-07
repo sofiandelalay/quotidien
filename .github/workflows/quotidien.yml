@@ -1,0 +1,78 @@
+name: quotidien
+
+on:
+  schedule:
+    # Le cron GitHub est en UTC et souvent en retard. Deux déclenchements par passage,
+    # à une heure d'écart, pour couvrir l'heure d'hiver (UTC+1) et l'heure d'été (UTC+2).
+    # Minutes décalées (:23) pour éviter les heures pleines, très chargées chez GitHub.
+    #   04:23 UTC = 05:23 à Paris en hiver, 06:23 en été
+    #   05:23 UTC = 06:23 à Paris en hiver, 07:23 en été
+    # Le script vérifie la fenêtre locale (config.yaml) et n'envoie jamais deux fois le même jour ;
+    # la notification est programmée chez ntfy pour arriver à 7h30 (champ « delay »).
+    - cron: "23 4 * * *"
+    - cron: "23 5 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Envoyer maintenant (hors fenêtre, même si le briefing du jour est déjà parti)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# Jamais deux exécutions en parallèle : la seconde attend et relit state.json à jour.
+concurrency:
+  group: quotidien
+  cancel-in-progress: false
+
+jobs:
+  matin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Masquer les secrets
+        env:
+          NTFY_TOPIC_BRIEFING: ${{ secrets.NTFY_TOPIC_BRIEFING }}
+          NTFY_TOPIC_POSITION: ${{ secrets.NTFY_TOPIC_POSITION }}
+        run: |
+          echo "::add-mask::$NTFY_TOPIC_BRIEFING"
+          echo "::add-mask::$NTFY_TOPIC_POSITION"
+
+      # ref: main (et non le commit du déclenchement) pour lire le state.json le plus récent,
+      # même si une exécution précédente l'a commité pendant que celle-ci attendait.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Vérifier le registre npm
+        run: node scripts/check-lock.mjs
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Briefing du matin
+        env:
+          NTFY_TOPIC_BRIEFING: ${{ secrets.NTFY_TOPIC_BRIEFING }}
+          NTFY_TOPIC_POSITION: ${{ secrets.NTFY_TOPIC_POSITION }}
+          FORCE: ${{ inputs.force == true }}
+        run: node src/main.mjs --passage matin
+
+      # Commit quotidien de state.json : évite le double envoi et garde le cron actif
+      # (GitHub suspend les crons d'un dépôt sans activité pendant 60 jours).
+      - name: Commiter state.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state/state.json
+          if git diff --cached --quiet; then echo "state.json inchangé"; exit 0; fi
+          git commit -m "État du $(TZ=Europe/Paris date +%F)"
+          for i in 1 2 3; do
+            git pull --rebase --quiet && git push --quiet && exit 0
+            sleep 5
+          done
+          exit 1
