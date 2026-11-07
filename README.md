@@ -38,7 +38,7 @@ Nommez-le « Position quotidien ». **Lancez-le une fois à la main**. iOS deman
 
 Sans cette première exécution, les automatisations restent bloquées sur ces questions.
 
-### 2. Deux automatisations : 7h00 et 18h00
+### 2. Deux automatisations : 7h00 et 19h30
 
 Onglet **Automatisation** → **+** (ou **Nouvelle automatisation**) → **Heure de la journée** :
 
@@ -46,9 +46,13 @@ Onglet **Automatisation** → **+** (ou **Nouvelle automatisation**) → **Heure
 2. Choisissez **Exécuter immédiatement** (et non « Exécuter après confirmation »). Désactivez **M'avertir lors de l'exécution**.
 3. **Suivant** → choisissez le raccourci **Position quotidien** → **OK**.
 
-Recommencez avec **18:00**.
+Recommencez avec **19:30**.
 
-> ℹ️ Le briefing est préparé entre 5h23 et 7h23, puis programmé pour 7h30. Il utilise donc la position de la veille au soir. Le passage du soir (préparé entre 16h23 et 18h23) utilise celle de 7h00. Or ntfy.sh ne garde les messages que 12 h : en heure d'été, la position de 18h00 a déjà disparu à 6h23, et le briefing prend Lille. Pour suivre vos déplacements toute l'année, placez la seconde automatisation **entre 19h30 et 21h** plutôt qu'à 18h00. Le Raccourci peut aussi être lancé à la main à tout moment.
+> ℹ️ Pourquoi ces heures ? ntfy.sh ne garde les messages que 12 h.
+> - Le briefing est préparé entre 5h23 et 7h23, puis programmé pour 7h30 : il utilise la position de 19h30 la veille, qui a moins de 12 h.
+> - Le passage du soir est préparé entre 16h23 et 18h23 : il utilise celle de 7h00.
+>
+> Si vous déplacez une automatisation, gardez moins de 12 h entre elle et le passage qui s'en sert. Le Raccourci peut aussi être lancé à la main à tout moment.
 
 Pour vérifier : lancez le raccourci, puis dans GitHub, Actions → **quotidien** → *Run workflow* (passage `matin`, force coché). Le log doit afficher « Position : Raccourci iPhone » (jamais les coordonnées), et la notification doit indiquer votre commune.
 
