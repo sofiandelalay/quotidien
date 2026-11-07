@@ -110,7 +110,7 @@ jobs:
 
       - name: Publier l'artefact de la page
         if: always() && steps.site.outputs.pret == 'oui'
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
@@ -142,5 +142,5 @@ jobs:
     steps:
       - name: Déployer la page de détail
         id: deploiement
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
