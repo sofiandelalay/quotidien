@@ -1,0 +1,142 @@
+/* Quotidien — page de détail. Mobile iOS d'abord, thème clair/sombre automatique, polices système. */
+:root {
+  --fond: #f2f2f7;
+  --carte: #ffffff;
+  --texte: #1c1c1e;
+  --discret: #6c6c70;
+  --trait: rgba(60, 60, 67, 0.18);
+  --accent: #2f6fd6;
+  --pluie: #2f7fe0;
+  --alerte-fond: #fff4e5;
+  --alerte-texte: #8a4b00;
+  --conseil-fond: #eaf2ff;
+  --bon: #34c759;
+  --moyen: #a7c93a;
+  --degrade: #ffcc00;
+  --mauvais: #ff9500;
+  --tres-mauvais: #ff3b30;
+  --extreme: #af52de;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fond: #000000;
+    --carte: #1c1c1e;
+    --texte: #f2f2f7;
+    --discret: #98989f;
+    --trait: rgba(84, 84, 88, 0.6);
+    --accent: #6ea2ff;
+    --pluie: #4d9bff;
+    --alerte-fond: #3a2a12;
+    --alerte-texte: #ffc773;
+    --conseil-fond: #13243f;
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font: 17px/1.4 -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+main {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
+header { padding: 8px 4px 12px; }
+h1 { font-size: 34px; line-height: 1.1; font-weight: 700; margin: 8px 0 4px; letter-spacing: -0.02em; }
+h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--discret); margin: 0 0 8px; }
+.maj { margin: 0; color: var(--discret); font-size: 15px; }
+.maj::first-letter { text-transform: uppercase; }
+small { color: var(--discret); font-size: 13px; margin-left: 6px; }
+.discret { color: var(--discret); margin: 0; }
+.alerte {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--alerte-fond);
+  color: var(--alerte-texte);
+  font-size: 15px;
+}
+
+.carte {
+  background: var(--carte);
+  border-radius: 16px;
+  padding: 16px;
+  margin: 0 0 12px;
+}
+.carte p { margin: 0 0 6px; }
+.carte p:last-child { margin-bottom: 0; }
+
+/* Météo */
+.temp { display: flex; align-items: center; gap: 12px; font-size: 32px; font-variant-numeric: tabular-nums; }
+.temp .emoji { font-size: 44px; line-height: 1; }
+.temp b { font-weight: 600; }
+.pluie { color: var(--discret); margin: 6px 0 14px !important; }
+.frise {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 2px;
+  height: 56px;
+  align-items: end;
+  border-bottom: 1px solid var(--trait);
+}
+.frise .h { height: 100%; display: flex; align-items: flex-end; position: relative; }
+.frise .h span { display: block; width: 100%; background: var(--pluie); border-radius: 3px 3px 0 0; }
+.frise .h.maintenant::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  border-left: 2px solid var(--accent);
+  opacity: 0.6;
+}
+.graduation { display: flex; justify-content: space-between; font-size: 12px; color: var(--discret); margin: 4px 0 12px; font-variant-numeric: tabular-nums; }
+.details, .reperes { display: grid; gap: 10px; margin: 0; }
+.details { grid-template-columns: repeat(3, 1fr); }
+.details dt, .reperes dt { font-size: 13px; color: var(--discret); }
+.details dd, .reperes dd { margin: 0; font-weight: 500; }
+.details small { display: block; margin-left: 0; }
+.conseil { margin-top: 14px !important; padding: 10px 12px; border-radius: 12px; background: var(--conseil-fond); }
+
+/* Air */
+.air { font-size: 20px; font-weight: 600; display: flex; align-items: baseline; flex-wrap: wrap; }
+.air::first-letter { text-transform: uppercase; }
+.pastille { width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; align-self: center; background: var(--discret); flex: none; }
+.niveau-bon { background: var(--bon); }
+.niveau-moyen { background: var(--moyen); }
+.niveau-dégradé { background: var(--degrade); }
+.niveau-mauvais { background: var(--mauvais); }
+.niveau-très-mauvais { background: var(--tres-mauvais); }
+.niveau-extrêmement-mauvais { background: var(--extreme); }
+
+/* Repères */
+.reperes { grid-template-columns: 1fr 1fr; }
+.reperes small { display: block; margin-left: 0; }
+
+/* Du jour */
+.du-jour summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.du-jour summary::-webkit-details-marker { display: none; }
+.du-jour summary h2 { margin: 0; }
+.du-jour summary::after { content: "›"; font-size: 22px; color: var(--discret); transform: rotate(90deg); transition: transform 0.2s; }
+.du-jour[open] summary::after { transform: rotate(-90deg); }
+figure { margin: 16px 0 0; }
+blockquote { margin: 0; }
+.arabe { font-size: 24px; line-height: 1.9; text-align: right; font-family: "Geeza Pro", "Noto Naskh Arabic", "Amiri", serif; margin-bottom: 10px !important; }
+.fr { font-style: italic; }
+figcaption { margin-top: 8px; font-size: 14px; color: var(--discret); }
+figcaption small { margin-left: 0; }
+.hadith { border-top: 1px solid var(--trait); padding-top: 16px; }
+.hadith blockquote p { font-size: 16px; }
+
+footer { text-align: center; font-size: 12px; color: var(--discret); margin: 20px 0 0; }
+
+@media (max-width: 360px) {
+  .details { grid-template-columns: 1fr 1fr; }
+}

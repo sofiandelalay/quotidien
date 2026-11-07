@@ -11,6 +11,7 @@
     "start": "node src/main.mjs",
     "simulate": "node src/simuler.mjs",
     "simulate:briefing": "node src/main.mjs --passage matin --dry-run --force --fixtures test/fixtures/matin",
+    "page": "node src/main.mjs --passage matin --force --dry-run --fixtures test/fixtures/matin --site _site && node scripts/site.mjs _site && node scripts/servir.mjs _site",
     "test": "node --test \"test/*.test.mjs\"",
     "check-lock": "node scripts/check-lock.mjs"
   },

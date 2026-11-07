@@ -121,7 +121,15 @@ GET https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/fra-nawawi.min
     hadiths: [ { hadithnumber: 1, arabicnumber: 1, text: "Il est rapporté d’après…", grades: [], reference: { book: 1, hadith: 1 } }, … ] }  (42 entrées)
 ```
 
-- Copié une fois dans `data/nawawi-fr.json` : `{ source, url, hadiths: [ { numero, texte } ] }`. À l'affichage : numéro + source.
+- Copié une fois dans `data/nawawi-fr.json` : `{ source, url, hadiths: [ { numero, texte } ] }`. À l'affichage : numéro et source.
+- Sélection déterministe : `hadiths[jours_depuis_1970 % 42]`, soit les 42 hadiths en 42 jours.
+- **Licence** : le dépôt fawazahmed0/hadith-api est sous **Unlicense** (domaine public), vérifié avec `gh api repos/fawazahmed0/hadith-api/license` le 7 novembre 2026. L'édition `fra-nawawi` indique `author: "Unknown"` et `source: ""` : le traducteur français n'est pas identifié.
+- **Qualité du texte** (vérifiée le 7 novembre 2026, et par `test/page.test.mjs`) :
+  - 42 entrées numérotées de 1 à 42 (les 40 hadiths, plus les deux ajoutés par Ibn Rajab) ;
+  - textes de 231 à 1 896 caractères, en français correct ;
+  - aucun problème d'encodage, aucune balise HTML ;
+  - formules d'usage (« qu'Allah l'agrée », ﷺ) et mention du rapporteur en fin de texte (« [Boukhari] [Mouslim] », « rapporté par at-Tirmidhi… ») ;
+  - onze textes se terminent par cette mention sans point final : ce n'est pas une troncature.
 - Autres éditions françaises existantes : abudawud, bukhari, dehlawi, ibnmajah, malik, muslim, nasai, qudsi.
 
 ## ntfy.sh

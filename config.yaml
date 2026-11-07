@@ -86,7 +86,7 @@ conseil:
 notification:
   verset: false               # le verset et le hadith sont sur la page, pas dans la notification
   priorite: 3                 # priorité ntfy (1 = min, 3 = normale, 5 = max)
-  lien: ""                    # adresse de la page de détail (ajoutée quand la page existera)
+  lien: "https://sofiandelalay.github.io/quotidien/"   # page de détail, ouverte en touchant la notification (pas un secret)
 
 agenda:
   # Liens ICS : secret GitHub CALENDAR_URLS, une ligne « libellé|url_ics » par agenda.

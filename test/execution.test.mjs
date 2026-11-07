@@ -173,3 +173,22 @@ test("alerte d'essai : titre « [Essai] », envoi immédiat, state.json inchang�
   assert.ok(envois.every((p) => p.delay === undefined && !p.message.includes('\n')));
   await assert.rejects(readFile(f, 'utf8'), /ENOENT/, 'aucun state.json écrit');
 });
+
+test('page : data.json écrit à chaque passage, sans agenda, anniversaire, coordonnées ni secret', async () => {
+  meteo = { jours: Array.from({ length: 4 }, (_, i) => ({ date: `2026-11-${String(9 + i).padStart(2, '0')}`, tmin: 4, tmax: 11 })) };
+  position = { time: Date.parse('2026-11-09T05:00:00Z') / 1000, texte: '43,30,5,37' };
+  const dossier = await mkdtemp(join(tmpdir(), 'site-'));
+  const f = await etatTemp();
+  for (const [passage, t] of [['matin', '2026-11-09T05:23:00Z'], ['soir', '2026-11-09T16:23:00Z']]) {
+    await executer({ opts: { passage, site: dossier }, env, maintenant: new Date(t), cheminEtat: f });
+    const brut = await readFile(join(dossier, 'data.json'), 'utf8');
+    const d = JSON.parse(brut);
+    assert.equal(d.passage, passage);
+    assert.equal(d.commune, 'Marseille', 'seul le nom de commune trahit la position');
+    for (const interdit of ['Kiné', 'Brocante', 'Dîner', 'Anniversaire', '43.3', '5.37', SUJET, SUJET_POS, 'SECRET', 'outlook']) {
+      assert.ok(!brut.includes(interdit), `« ${interdit} » dans data.json (${passage})`);
+    }
+  }
+  assert.ok(envois[0].message.includes('Kiné'), "l'agenda reste dans la notification");
+  assert.equal(envois[0].click, 'https://sofiandelalay.github.io/quotidien/', 'lien de la page en action « click »');
+});

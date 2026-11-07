@@ -80,10 +80,43 @@ Pour le modifier sans écrire les liens dans un fichier :
 - **Anniversaires** : sont traités comme anniversaires les événements « toute la journée » d'un agenda listé dans `agenda.anniversaires.agendas`, ou dont le titre contient « anniversaire ». Ils sont affichés le jour même (`🎂 Anniversaire de Marie`), en tête de l'agenda et hors de la limite de 3 lignes, y compris avec `detail: nombre`. Pour les couper : `agenda.anniversaires.actif: false`.
 - Les événements ne vont que dans la notification : jamais dans un log, un fichier, un commit ni la page.
 
-## Modifier la configuration
+## Page de détail
 
-Tous les seuils sont dans [`config.yaml`](config.yaml), commenté en français : pluie, vent, UV, air, pollens, conseils, heures d'envoi, fenêtres, agenda.
-On peut l'éditer depuis l'appli GitHub de l'iPhone ; le changement s'applique au prochain passage.
+**https://sofiandelalay.github.io/quotidien/**
+
+Une seule page mobile, mise à jour à chaque passage (matin et soir). Elle affiche :
+- la commune ;
+- la météo du jour, avec une frise de pluie sur 24 h, le vent, les UV et le soleil ;
+- l'air et les pollens ;
+- le prochain férié et la fête du jour ;
+- une section repliable **Du jour** : le verset (arabe et français, sourate:verset) et le hadith (numéro et source).
+
+Un bandeau prévient si les données ont plus de 26 h. Toucher une notification ouvre cette page : l'adresse est `notification.lien` dans `config.yaml`. Ajouter `#du-jour` à l'adresse ouvre directement le verset et le hadith.
+
+La page est **publique**. Elle ne contient ni agenda, ni anniversaire, ni position : seulement le nom de la commune. Ses données (`data.json`) sont construites par liste blanche de champs, et vérifiées par `test/page.test.mjs`. Elle est déployée par GitHub Actions (`upload-pages-artifact` puis `deploy-pages`) ; aucun fichier généré n'est commité.
+
+**L'installer sur l'écran d'accueil** :
+1. Ouvrez l'adresse dans **Safari** (pas dans une autre appli).
+2. Touchez **Partager** (le carré avec la flèche), puis **Sur l'écran d'accueil**.
+3. Touchez **Ajouter**.
+
+L'icône « Quotidien » (soleil et nuage) apparaît. La page s'ouvre alors en plein écran, sans barre d'adresse, en thème clair ou sombre selon l'iPhone. Il n'y a pas de mode hors ligne (aucun service worker) : la page recharge ses données chaque fois qu'on revient dessus.
+
+## Modifier la configuration depuis l'iPhone
+
+Tous les seuils sont dans [`config.yaml`](config.yaml), commenté en français : pluie, vent, UV, air, pollens, conseils, heures d'envoi, fenêtres, agenda et lien de la page. Les alertes sont dans [`rules.yaml`](rules.yaml) (voir « Écrire une règle »).
+
+Pour les modifier depuis l'**appli GitHub** de l'iPhone :
+1. Ouvrez le dépôt **sofiandelalay/quotidien** et touchez **Code**.
+2. Ouvrez `config.yaml` ou `rules.yaml`, touchez **…** puis **Modifier le fichier** (l'icône crayon).
+3. Modifiez une valeur, en gardant l'indentation (des espaces, jamais de tabulation).
+4. Touchez **Valider les modifications**, ajoutez un message court, puis **Valider directement sur main**.
+
+Le changement s'applique au prochain passage.
+
+Si l'appli GitHub ne propose pas la modification, ouvrez le fichier sur github.com dans Safari : l'icône crayon y fait la même chose.
+
+Pour vérifier tout de suite : onglet **Actions** → **quotidien** → **Run workflow** (voir « Lancer un test manuel »). Une faute de saisie dans `rules.yaml` apparaît en avertissement dans le log, en français, et le briefing part quand même. Une faute qui rend `config.yaml` illisible fait échouer le passage : GitHub vous envoie alors un e-mail, et il suffit de corriger le fichier.
 
 ## Écrire une règle (`rules.yaml`)
 
@@ -141,7 +174,9 @@ Règles de départ : **rando** (jeudi soir : samedi et dimanche secs et ≥ 15 �
 
   Une fixture décrit la météo jour par jour (`tmin`, `tmax`, `pluie` par heure, `air`…). Copiez-en une pour tester une idée de règle.
 - Simulation du briefing : `npm run simulate:briefing`.
-- Tests : `npm test`.
+- Page en local, avec les données fictives de `test/fixtures/matin` : `npm run page`, puis ouvrez http://127.0.0.1:8080/ dans un navigateur.
+- Tests : `npm test`. Ils couvrent les règles, l'agenda, la fenêtre du cron, la sélection du verset et du hadith, et l'absence de donnée sensible dans `data.json`.
+- Depuis l'iPhone : appli GitHub → dépôt → **Actions** → **quotidien** → **Run workflow**. Choisissez le passage, cochez **force**, puis **Run workflow**. La notification arrive en moins d'une minute et la page se met à jour une minute plus tard.
 
 ## Fonctionnement
 
@@ -149,5 +184,6 @@ Règles de départ : **rando** (jeudi soir : samedi et dimanche secs et ≥ 15 �
 - Le script choisit le passage d'après l'heure de Paris (fenêtres de `config.yaml`) et ne refait jamais un passage terminé.
 - Il programme les notifications chez ntfy (champ `delay`) pour 7h30 et 19h00 pile.
 - `state/state.json` est commité à chaque passage : il évite les doublons et garde le cron actif.
+- La page de détail est republiée à chaque passage effectué (pas quand le passage était déjà fait).
 - `diagnostic` vérifie que chaque source répond depuis GitHub Actions ; `donnees` recopie dans `data/` les fêtes, les hadiths et la liste des versets courts.
 - Avant chaque commit : `npm run check-lock`. Le PC utilise un registre npm privé ; le projet force le registre public via `.npmrc`.

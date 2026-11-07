@@ -35,7 +35,9 @@ on:
         default: aucune
 
 permissions:
-  contents: write
+  contents: write   # commit de state.json
+  pages: write      # déploiement de la page de détail
+  id-token: write   # exigé par actions/deploy-pages
 
 # Jamais deux exécutions en parallèle : la seconde attend et relit state.json à jour.
 concurrency:
@@ -46,6 +48,8 @@ jobs:
   passage:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      site: ${{ steps.site.outputs.pret }}
     steps:
       - name: Masquer les secrets
         env:
@@ -89,7 +93,26 @@ jobs:
           PASSAGE: ${{ github.event_name == 'workflow_dispatch' && inputs.passage || 'auto' }}
           FORCE: ${{ inputs.force == true }}
           ESSAI: ${{ inputs.essai != 'aucune' && inputs.essai || '' }}
-        run: node src/main.mjs
+        run: node src/main.mjs --site _site
+
+      # Page de détail : assemblée dans _site/ (jamais commité) quand un passage a eu lieu,
+      # puis publiée comme artefact Pages. Rien n'est déployé si le passage était déjà fait.
+      - name: Assembler la page
+        id: site
+        if: always()
+        run: |
+          if [ -f _site/data.json ]; then
+            node scripts/site.mjs _site
+            echo "pret=oui" >> "$GITHUB_OUTPUT"
+          else
+            echo "Pas de nouvelles données : la page en ligne reste telle quelle."
+          fi
+
+      - name: Publier l'artefact de la page
+        if: always() && steps.site.outputs.pret == 'oui'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
 
       # Commit de state.json (même après un échec partiel : ce qui est parti ne repartira pas).
       # Le commit quotidien garde aussi le cron actif (GitHub suspend les crons d'un dépôt
@@ -107,3 +130,17 @@ jobs:
             sleep 5
           done
           exit 1
+
+  page:
+    needs: passage
+    if: always() && needs.passage.outputs.site == 'oui'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - name: Déployer la page de détail
+        id: deploiement
+        uses: actions/deploy-pages@v4
+

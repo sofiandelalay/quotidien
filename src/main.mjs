@@ -1,4 +1,6 @@
 // Point d'entrée : node src/main.mjs [--passage auto|matin|soir] [--force] [--dry-run] [--fixtures dossier] [--maintenant ISO]
+//                  [--site dossier]  (écrit <dossier>/data.json pour la page de détail)
+//                  [--essai rando|voiture|air|gel]  (alerte d'essai, rien dans state.json)
 //
 // Les logs GitHub d'un dépôt public sont publics : on n'y écrit ni sujet ntfy, ni position,
 // ni lien ou événement d'agenda, ni contenu du briefing — seulement l'état des sources et des règles.
@@ -17,6 +19,7 @@ import { chargerRegles, creerContexte, evaluerRegles } from './regles.mjs';
 import { lireCalendarUrls, lireAgendas, composerAgenda } from './agenda.mjs';
 import { construireMessage, publier } from './ntfy.mjs';
 import { chargerFixture, simuler } from './simuler.mjs';
+import { construireDonneesPage, ecrireDonneesPage } from './page.mjs';
 import { paris } from './temps.mjs';
 
 /** Exécute une récupération ; en cas d'échec, note la source et renvoie null. */
@@ -47,25 +50,32 @@ function lecteurFixtures(dossier) {
   };
 }
 
-/** Prépare le briefing du matin (notification à composer). */
-async function preparerBriefing({ cfg, jour, pos, prev, air, get, echecs, agendaTexte, lecteurIcs }) {
-  const calendriers = lireCalendarUrls(agendaTexte);
-  const [ferie, nomCommune, fete, verset, hadith, agenda] = await Promise.all([
+/**
+ * Données du jour, communes au briefing et à la page : commune, météo, air, férié, fête, verset, hadith.
+ * Ni agenda ni coordonnées ici. Une source en échec donne null (section omise).
+ */
+async function collecterJour({ cfg, jour, pos, prev, air, get, echecs }) {
+  const [ferie, nomCommune, fete, verset, hadith] = await Promise.all([
     sur('fériés', src.prochainFerie(jour, get), echecs),
     sur('commune', src.commune(pos, get), echecs),
     sur('fête', src.fete(jour), echecs),
     sur('verset', src.verset(jour, get), echecs),
     sur('hadith', src.hadith(jour), echecs),
-    calendriers.length ? lireAgendas(calendriers, jour, cfg.agenda, lecteurIcs ? { fetcher: lecteurIcs } : {}) : null,
   ]);
-  if (agenda) echecs.push(...agenda.echecs);
   const meteo = prev ? await sur('météo (analyse)', Promise.resolve().then(() => resumerMeteo(prev, jour, cfg)), echecs) : null;
   const resumeAir = air ? await sur('air (analyse)', Promise.resolve().then(() => resumerAir(air, jour, cfg)), echecs) : null;
   const commune = nomCommune ?? (pos.source === 'defaut' ? pos.nomParDefaut : 'Ma position');
-  const { anniversaires, lignes } = agenda ? composerAgenda(agenda.agendas, jour, cfg.agenda) : { anniversaires: [], lignes: [] };
-  const b = composerBriefing({ jour, commune, meteo, air: resumeAir, ferie, fete, anniversaires, agenda: lignes, verset, hadith }, cfg);
+  return { jour, commune, meteo, air: resumeAir, ferie, fete, verset, hadith };
+}
+
+/** Agenda du briefing (notification seulement : jamais sur la page ni dans un log). */
+async function agendaDuJour({ cfg, jour, echecs, agendaTexte, lecteurIcs }) {
+  const calendriers = lireCalendarUrls(agendaTexte);
   console.log(`Agenda : ${calendriers.length ? `${calendriers.length} agenda(s) configuré(s)` : 'aucun agenda configuré (secret CALENDAR_URLS absent)'}.`);
-  return { briefing: b, commune };
+  if (!calendriers.length) return { anniversaires: [], lignes: [] };
+  const agenda = await lireAgendas(calendriers, jour, cfg.agenda, lecteurIcs ? { fetcher: lecteurIcs } : {});
+  echecs.push(...agenda.echecs);
+  return composerAgenda(agenda.agendas, jour, cfg.agenda);
 }
 
 /**
@@ -81,7 +91,7 @@ export async function envoyerEssai(id, { env = process.env } = {}) {
   const r = simuler(regle, fixture, cfg);
   if (!r.declenche) throw new Error(`la fixture ${id}-oui ne déclenche pas la règle (${r.raison})`);
   if (!env.NTFY_TOPIC_BRIEFING) throw new Error('NTFY_TOPIC_BRIEFING manquant');
-  const rep = await publier(construireMessage({ topic: env.NTFY_TOPIC_BRIEFING, titre: `[Essai] ${r.titre}`, message: r.message, priorite: cfg.notification.priorite }));
+  const rep = await publier(construireMessage({ topic: env.NTFY_TOPIC_BRIEFING, titre: `[Essai] ${r.titre}`, message: r.message, priorite: cfg.notification.priorite, lien: cfg.notification.lien }));
   console.log(`Alerte d'essai « ${id} » envoyée (id ${rep.id}) ; state.json non modifié.`);
 }
 
@@ -112,14 +122,22 @@ export async function executer({ opts, env = process.env, maintenant = new Date(
 
   const [prev, air] = await Promise.all([sur('météo', src.prevision(pos, get), echecs), sur('air', src.qualiteAir(pos, get), echecs)]);
 
+  const donnees = await collecterJour({ cfg, jour, pos, prev, air, get, echecs });
+  const commune = donnees.commune;
+
+  // Données de la page de détail (liste blanche de champs : ni agenda ni position).
+  if (opts.site) {
+    await ecrireDonneesPage(opts.site, construireDonneesPage(donnees, { genere: maintenant, passage, cfg }));
+    console.log(`Page : ${opts.site}/data.json écrit.`);
+  }
+
   /** @type {{cle: string, titre: string, message: string, priorite?: number, briefing?: boolean}[]} */
   const aEnvoyer = [];
-  let commune = '';
   if (passage === 'matin') {
-    const r = await preparerBriefing({ cfg, jour, pos, prev, air, get, echecs, agendaTexte: env.CALENDAR_URLS, lecteurIcs });
-    commune = r.commune;
-    aEnvoyer.push({ cle: `briefing:${jour}`, titre: r.briefing.titre, message: r.briefing.message, briefing: true });
-    console.log(`Briefing : titre + ${r.briefing.lignes.length} ligne(s).`);
+    const { anniversaires, lignes } = await agendaDuJour({ cfg, jour, echecs, agendaTexte: env.CALENDAR_URLS, lecteurIcs });
+    const b = composerBriefing({ ...donnees, anniversaires, agenda: lignes }, cfg);
+    aEnvoyer.push({ cle: `briefing:${jour}`, titre: b.titre, message: b.message, briefing: true });
+    console.log(`Briefing : titre + ${b.lignes.length} ligne(s).`);
   }
 
   // Alertes « bon moment pour… »
@@ -192,6 +210,7 @@ if (estLanceDirectement) {
       fixtures: { type: 'string' },
       maintenant: { type: 'string' },
       essai: { type: 'string', default: process.env.ESSAI || '' },
+      site: { type: 'string' },
     },
   });
   executer({ opts, maintenant: opts.maintenant ? new Date(opts.maintenant) : new Date() }).catch((e) => {
