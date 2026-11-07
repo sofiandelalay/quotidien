@@ -61,11 +61,11 @@ jobs:
 
       # ref: main (et non le commit du déclenchement) pour lire le state.json le plus récent,
       # même si une exécution précédente l'a commité pendant que celle-ci attendait.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: main
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
