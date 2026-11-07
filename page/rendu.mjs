@@ -53,7 +53,7 @@ function sectionMeteo(m, conseil, heureActuelle) {
   ].join('');
   return `<section class="carte meteo">
       <div class="temp"><span class="emoji" aria-hidden="true">${esc(m.emoji)}</span><span><b>${deg(m.min)}</b> / <b>${deg(m.max)}</b></span></div>
-      <p class="pluie">${m.pluie ? `Pluie ${esc(m.pluie)}${m.cumul >= 1 ? ` · ${esc(virgule(Math.round(m.cumul)))} mm` : ''}` : 'Pas de pluie en journée'}</p>
+      <p class="ciel">${[m.ciel ? `<b>${esc(m.ciel)}</b>` : '', m.pluie ? `pluie ${esc(m.pluie)}${m.cumul >= 1 ? ` (${esc(virgule(Math.round(m.cumul)))} mm)` : ''}` : 'pas de pluie en journée'].filter(Boolean).join(' · ').replace(/^p/, 'P')}</p>
       ${Array.isArray(m.heures) && m.heures.length ? frise(m.heures, heureActuelle) : ''}
       <dl class="details">${details}</dl>
       ${conseil ? `<p class="conseil">${esc(conseil)}</p>` : ''}
@@ -62,13 +62,11 @@ function sectionMeteo(m, conseil, heureActuelle) {
 
 function sectionAir(a) {
   if (!a) return '';
-  const pollens = (a.pollens ?? []).filter((p) => p.valeur > 0);
-  const liste = pollens.length
-    ? `<p>Pollens : ${pollens.map((p) => `${p.notable ? '<b>' : ''}${esc(p.nom)} ${esc(p.valeur)}${p.notable ? '</b>' : ''}`).join(', ')} <small>(grains/m³)</small></p>`
-    : '<p class="discret">Pas de pollens notables.</p>';
+  const notables = (a.pollens ?? []).filter((p) => p.notable);
+  const liste = notables.length ? `<p>Pollens : ${notables.map((p) => esc(p.nom)).join(', ')}</p>` : '<p class="discret">Pas de pollens notables.</p>';
   return `<section class="carte">
       <h2>Air</h2>
-      <p class="air"><span class="pastille niveau-${esc((a.mot ?? '').replace(/\s/g, '-'))}"></span>${esc(a.mot ?? 'indisponible')}<small>indice européen ${esc(a.indice ?? '?')}${a.pm25 != null ? ` · PM2,5 ${esc(a.pm25)} · PM10 ${esc(a.pm10)}` : ''}</small></p>
+      <p class="air"><span class="pastille niveau-${esc((a.mot ?? '').replace(/\s/g, '-'))}"></span>${esc(a.mot ?? 'indisponible')}</p>
       ${liste}
     </section>`;
 }
@@ -91,16 +89,16 @@ function sectionDuJour(v, h) {
           <p lang="ar" dir="rtl" class="arabe">${esc(v.ar)}</p>
           <p class="fr">${esc(v.fr)}</p>
         </blockquote>
-        <figcaption>Sourate ${esc(v.sourate)}${v.sourate_ar ? ` <span lang="ar" dir="rtl">${esc(v.sourate_ar)}</span>` : ''} · <b>${esc(v.ref)}</b><br><small>Traduction Muhammad Hamidullah · AlQuran Cloud</small></figcaption>
+        <figcaption>Sourate ${esc(v.sourate)}${v.sourate_ar ? ` <span lang="ar" dir="rtl">${esc(v.sourate_ar)}</span>` : ''} · <b>${esc(v.ref)}</b></figcaption>
       </figure>`
     : '';
   const hadith = h
     ? `<figure class="hadith">
         <blockquote><p>${esc(h.texte)}</p></blockquote>
-        <figcaption>Hadith n° <b>${esc(h.numero)}</b> des quarante hadiths de an-Nawawi<br><small>${esc(h.source)}</small></figcaption>
+        <figcaption>Hadith n° <b>${esc(h.numero)}</b> des quarante hadiths de an-Nawawi</figcaption>
       </figure>`
     : '';
-  return `<details class="carte du-jour" id="du-jour"><summary><h2>Du jour</h2></summary>${verset}${hadith}</details>`;
+  return `<details class="carte du-jour" id="du-jour"><summary><h2>Hadith et verset</h2></summary>${hadith}${verset}</details>`;
 }
 
 /**
@@ -120,6 +118,5 @@ export function rendre(d, maintenant = new Date()) {
     ${sectionMeteo(d.meteo, d.conseil, heureActuelle)}
     ${sectionAir(d.air)}
     ${sectionRepere(d.ferie, d.fete)}
-    ${sectionDuJour(d.verset, d.hadith)}
-    <footer>Sources : Open-Meteo, Nager.Date, geo.api.gouv.fr, AlQuran Cloud, fawazahmed0/hadith-api.</footer>`;
+    ${sectionDuJour(d.verset, d.hadith)}`;
 }

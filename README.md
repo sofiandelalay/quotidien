@@ -13,6 +13,22 @@ Le nom du sujet fait office de mot de passe : ne le partagez pas.
 
 > ⚠️ **Ne vous abonnez pas au sujet de position** (`NTFY_TOPIC_POSITION`). Il ne sert qu'au Raccourci ci-dessous pour envoyer votre position au script. S'y abonner n'apporterait rien et afficherait vos coordonnées en notification deux fois par jour.
 
+### Je ne reçois pas les notifications
+
+Sur iPhone, ntfy.sh passe par le service de notifications d'Apple. Cette liaison se casse parfois : les messages n'apparaissent alors que dans l'appli, quand on l'ouvre. La documentation de ntfy ([problèmes connus](https://docs.ntfy.sh/known-issues/)) recommande de **supprimer l'abonnement puis de le réajouter**.
+
+1. Dans l'appli ntfy, faites glisser le sujet vers la gauche, puis **Supprimer**.
+2. Fermez l'appli : balayez-la vers le haut dans le sélecteur d'applis.
+3. Rouvrez-la, touchez **+**, saisissez le nom du sujet et laissez le serveur par défaut (**ntfy.sh**). N'activez pas « Use another server ».
+4. Verrouillez l'iPhone, puis lancez une alerte d'essai depuis l'appli GitHub : Actions → **quotidien** → Run workflow → **essai** = `gel`. Une bannière doit arriver en moins d'une minute.
+
+Si rien n'arrive, vérifiez dans **Réglages → Notifications → ntfy** :
+- Écran verrouillé, Centre de notifications et Bannières sont cochés ;
+- ntfy n'est pas dans le **Résumé programmé** ;
+- aucun mode **Concentration** ne filtre ntfy.
+
+Mettez aussi l'appli à jour depuis l'App Store.
+
 ## Raccourci iOS : envoyer la position
 
 Le script calcule la météo là où vous êtes. Deux fois par jour, l'iPhone publie sa position, arrondie à 2 décimales (environ 1 km), sur le sujet ntfy privé. Le script lit le dernier message de moins de 12 h. Sans message récent, il utilise Lille. La position n'est jamais écrite dans un fichier, un commit, un log ni la page : seul le nom de la commune apparaît dans la notification.
@@ -58,22 +74,30 @@ Pour vérifier : lancez le raccourci, puis dans GitHub, Actions → **quotidien*
 
 ## Agenda et anniversaires
 
-Les liens ICS sont dans le secret GitHub `CALENDAR_URLS`, une ligne par agenda : `libellé|url_ics`. Par exemple, avec des liens fictifs :
+Pour que le briefing affiche vos rendez-vous, le script doit pouvoir lire vos agendas. Il le fait grâce à un **lien privé** (format « ICS ») que fournissent Outlook et Google. Ce lien est rangé dans un secret GitHub, `CALENDAR_URLS`, que personne d'autre ne voit. Trois étapes, à faire une seule fois, **sur un ordinateur** (les réglages ne sont pas dans les applis mobiles) :
+
+**1. Récupérer le lien de chaque agenda**
+- **Outlook** : sur outlook.live.com → ⚙️ Paramètres → Calendrier → **Calendriers partagés** → *Publier un calendrier*. Choisissez le calendrier, puis « Peut afficher tous les détails », et touchez **Publier**. Deux liens apparaissent : copiez celui qui se termine par **.ics**.
+- **Google** : sur calendar.google.com → ⚙️ → **Paramètres** → dans la colonne de gauche, *Paramètres de mes agendas*, cliquez sur l'agenda → section *Intégrer l'agenda* → **Adresse secrète au format iCal** : copiez-la.
+- **Anniversaires** (facultatif) : faites de même avec le calendrier « Anniversaires », s'il propose un lien. Sinon, les événements « toute la journée » dont le titre contient « anniversaire » sont reconnus dans vos agendas habituels.
+
+**2. Écrire une ligne par agenda**, au format `nom|lien`, dans un bloc-notes (sans l'enregistrer). Par exemple :
 
 ```
 Outlook|https://outlook.live.com/owa/calendar/…/calendar.ics
-Google|https://calendar.google.com/calendar/ical/…/private-…/basic.ics
-Anniversaires|https://calendar.google.com/calendar/ical/…/basic.ics
+Google|https://calendar.google.com/calendar/ical/…/basic.ics
+Anniversaires|https://…
 ```
 
-Pour le modifier sans écrire les liens dans un fichier :
-1. Copiez toutes les lignes dans le presse-papiers.
-2. Dans PowerShell, lancez `Get-Clipboard | gh secret set CALENDAR_URLS --repo sofiandelalay/quotidien`.
+**3. L'enregistrer dans GitHub** : sélectionnez et copiez toutes les lignes, ouvrez PowerShell et lancez :
 
-`gh` lit alors le secret sur l'entrée standard. Son invite interactive, elle, ne prendrait que la première ligne. Pour vérifier les libellés sans afficher les liens, lancez le workflow `quotidien` (passage `matin`, force) : le log indique « Agenda : N agenda(s) configuré(s) ».
+```
+Get-Clipboard | gh secret set CALENDAR_URLS --repo sofiandelalay/quotidien
+```
 
-- **Lien Outlook.com** : outlook.live.com → Paramètres → Calendrier → **Calendriers partagés** → *Publier un calendrier* → choisir le calendrier, « Peut afficher tous les détails » → **Publier** → copier le lien **ICS**.
-- **Lien Google** : calendar.google.com → ⚙️ → *Paramètres de mes agendas* → l'agenda → **Adresse secrète au format iCal** → copier.
+Les liens ne sont écrits nulle part ailleurs. Pour vérifier, lancez le workflow `quotidien` (passage `matin`, force) : le log indique « Agenda : 2 agenda(s) configuré(s) », et la notification affiche vos rendez-vous.
+
+Ce que fait ensuite le script :
 - Récurrences, exceptions et fuseaux Windows d'Outlook (« Romance Standard Time »…) sont gérés.
 - Le briefing affiche jusqu'à 3 lignes : aujourd'hui, puis demain jusqu'à midi (`10h Kiné`, `Demain 8h30 Contrôle technique`, `+ 2 autres événements`). Avec `agenda.detail: nombre`, une seule ligne s'affiche : `Agenda : 2 aujourd'hui, 1 demain matin`.
 - **Hors travail** : `agenda.ignorer_agendas` ignore des agendas entiers ; `agenda.ignorer_mots_cles` ignore les événements dont le titre contient un de ces mots (réunion, teams…).
@@ -86,12 +110,12 @@ Pour le modifier sans écrire les liens dans un fichier :
 
 Une seule page mobile, mise à jour à chaque passage (matin et soir). Elle affiche :
 - la commune ;
-- la météo du jour, avec une frise de pluie sur 24 h, le vent, les UV et le soleil ;
-- l'air et les pollens ;
+- la météo du jour : l'état du ciel en un mot (ensoleillé, nuageux, couvert…), la pluie avec une frise sur 24 h, le vent, les UV et le soleil ;
+- l'air en un mot (bon, moyen, dégradé…) et les pollens notables ;
 - le prochain férié et la fête du jour ;
-- une section repliable **Du jour** : le verset (arabe et français, sourate:verset) et le hadith (numéro et source).
+- une section repliable **Hadith et verset** : le hadith (son numéro parmi les quarante hadiths de an-Nawawi), puis le verset (arabe et français, sourate:verset).
 
-Un bandeau prévient si les données ont plus de 26 h. Toucher une notification ouvre cette page : l'adresse est `notification.lien` dans `config.yaml`. Ajouter `#du-jour` à l'adresse ouvre directement le verset et le hadith.
+Un bandeau prévient si les données ont plus de 26 h. Toucher une notification ouvre cette page : l'adresse est `notification.lien` dans `config.yaml`. Ajouter `#du-jour` à l'adresse ouvre directement la section « Hadith et verset ».
 
 La page est **publique**. Elle ne contient ni agenda, ni anniversaire, ni position : seulement le nom de la commune. Ses données (`data.json`) sont construites par liste blanche de champs, et vérifiées par `test/page.test.mjs`. Elle est déployée par GitHub Actions (`upload-pages-artifact` puis `deploy-pages`) ; aucun fichier généré n'est commité.
 

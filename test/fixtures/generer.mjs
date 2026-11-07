@@ -13,7 +13,7 @@ const mm = time.map((t) => (t.startsWith('2026-11-07') ? { 14: 0.6, 15: 1.8, 16:
 const proba = time.map((t) => (t.startsWith('2026-11-07') ? { 9: 40, 13: 35, 14: 80, 15: 90, 16: 85, 17: 45 }[+t.slice(11, 13)] ?? 10 : 5));
 ecrire('prevision.json', {
   latitude: 50.638, longitude: 3.074, timezone: 'Europe/Paris', utc_offset_seconds: 3600,
-  hourly_units: { time: 'iso8601', temperature_2m: '°C', apparent_temperature: '°C', precipitation: 'mm', precipitation_probability: '%', weather_code: 'wmo code', wind_speed_10m: 'km/h', wind_gusts_10m: 'km/h', uv_index: '' },
+  hourly_units: { time: 'iso8601', temperature_2m: '°C', apparent_temperature: '°C', precipitation: 'mm', precipitation_probability: '%', weather_code: 'wmo code', cloud_cover: '%', wind_speed_10m: 'km/h', wind_gusts_10m: 'km/h', uv_index: '' },
   hourly: {
     time,
     temperature_2m: temp,
@@ -24,6 +24,7 @@ ecrire('prevision.json', {
     wind_speed_10m: time.map((t) => (+t.slice(11, 13) === 15 ? 22.3 : 14.1)),
     wind_gusts_10m: time.map((t) => (+t.slice(11, 13) === 15 ? 41.8 : 25)),
     uv_index: time.map((t) => (+t.slice(11, 13) === 13 ? 1.4 : 0.3)),
+    cloud_cover: time.map((t) => (+t.slice(11, 13) >= 12 && +t.slice(11, 13) <= 18 ? 100 : 80)), // couvert
   },
   daily: {
     time: jours,

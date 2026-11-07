@@ -3,6 +3,7 @@ import { creneauxPluie } from './pluie.mjs';
 
 const max = (xs) => (xs.length ? Math.max(...xs) : null);
 const min = (xs) => (xs.length ? Math.min(...xs) : null);
+const moyenne = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
 const nombres = (xs) => xs.filter((x) => typeof x === 'number' && Number.isFinite(x));
 
 /** Heures (locales, Paris) d'un jour donné, avec toutes les variables horaires. */
@@ -20,6 +21,7 @@ export function heuresDuJour(hourly, jour) {
       vent: hourly.wind_speed_10m?.[i],
       rafales: hourly.wind_gusts_10m?.[i],
       uv: hourly.uv_index?.[i],
+      nuages: hourly.cloud_cover?.[i],
     });
   });
   return res;
@@ -53,6 +55,7 @@ export function resumerMeteo(prevision, jour, cfg) {
     ventMax: max(nombres(journee.map((h) => h.vent))),
     rafalesMax: max(nombres(journee.map((h) => h.rafales))),
     uvMax: max(nombres(journee.map((h) => h.uv))),
+    nuagesMoyens: moyenne(nombres(journee.map((h) => h.nuages))),
     tempMinGel: min(nombres(toutes.filter((h) => dans(h, c.gel.heures)).map((h) => h.temp))),
     ressentiMatin: min(nombres(toutes.filter((h) => dans(h, c.manteau.heures)).map((h) => h.ressenti))),
     heures: toutes,
@@ -95,4 +98,22 @@ export function pollensNotables(pollens, seuils) {
     .filter(([nom, v]) => seuils[nom] !== undefined && v >= seuils[nom] && v > 0)
     .sort(([a, va], [b, vb]) => vb / seuils[b] - va / seuils[a])
     .map(([nom]) => NOMS_POLLENS[nom] ?? nom);
+}
+
+/**
+ * État du ciel en un mot, d'après la couverture nuageuse moyenne en journée (seuils dans config.yaml,
+ * « ciel »). Le brouillard, la neige et l'orage priment. Sans couverture nuageuse : d'après le code WMO.
+ * @returns {{ mot: string|null, emoji: string }}
+ */
+export function cielDuJour(m, niveaux) {
+  const pluie = m.creneaux.length > 0;
+  if ([95, 96, 99].includes(m.code)) return { mot: 'Orageux', emoji: '⛈️' };
+  if ((m.code >= 71 && m.code <= 77) || m.code === 85 || m.code === 86) return { mot: 'Neigeux', emoji: '🌨️' };
+  if ((m.code === 45 || m.code === 48) && !pluie) return { mot: 'Brouillard', emoji: '🌫️' };
+  let mot = null;
+  if (m.nuagesMoyens != null) mot = (niveaux.find((n) => m.nuagesMoyens < n.max) ?? niveaux.at(-1)).mot;
+  else mot = { 0: 'Ensoleillé', 1: 'Plutôt ensoleillé', 2: 'Nuageux', 3: 'Couvert' }[m.code] ?? null;
+  const index = mot ? niveaux.findIndex((n) => n.mot === mot) : -1; // 0 = le plus dégagé
+  const emojis = pluie ? ['🌦️', '🌦️', '🌧️', '🌧️'] : ['☀️', '🌤️', '⛅', '☁️'];
+  return { mot, emoji: emojis[Math.max(0, Math.min(3, index === -1 ? (pluie ? 3 : 2) : index))] };
 }

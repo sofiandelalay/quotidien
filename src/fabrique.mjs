@@ -29,7 +29,7 @@ export function fabriquerPrevision({ jours }) {
 
   const hourly = {
     time: [], temperature_2m: [], apparent_temperature: [], precipitation: [], precipitation_probability: [],
-    weather_code: [], wind_speed_10m: [], wind_gusts_10m: [], uv_index: [],
+    weather_code: [], cloud_cover: [], wind_speed_10m: [], wind_gusts_10m: [], uv_index: [],
   };
   jours.forEach((j, i) => {
     for (let h = 0; h < 24; h++) {
@@ -41,6 +41,7 @@ export function fabriquerPrevision({ jours }) {
       hourly.precipitation.push(mm);
       hourly.precipitation_probability.push(mm > 0 ? 90 : 5);
       hourly.weather_code.push(mm > 0 ? (t <= 0 ? 71 : 61) : (j.code ?? 3));
+      hourly.cloud_cover.push(mm > 0 ? 95 : (j.nuages ?? 60));
       hourly.wind_speed_10m.push(j.vent ?? 12);
       hourly.wind_gusts_10m.push(h >= 12 && h <= 16 ? (j.rafales ?? 25) : Math.min(j.rafales ?? 25, 25));
       hourly.uv_index.push(h >= 11 && h <= 15 ? (j.uv ?? 1) : 0);

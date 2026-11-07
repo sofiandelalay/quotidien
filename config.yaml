@@ -40,6 +40,13 @@ vent:
 uv:
   affiche_a_partir_de: 3      # l'indice UV est indiqué à partir de cette valeur
 
+ciel:
+  # Couverture nuageuse moyenne en journée (%) → mot affiché sur la page. Chaque niveau vaut jusqu'à « max » (exclu).
+  - { max: 20, mot: Ensoleillé }
+  - { max: 45, mot: Plutôt ensoleillé }
+  - { max: 75, mot: Nuageux }
+  - { max: 101, mot: Couvert }
+
 air:
   # Indice européen de qualité de l'air (european_aqi) → mot affiché. Chaque niveau vaut jusqu'à « max » (exclu).
   niveaux:

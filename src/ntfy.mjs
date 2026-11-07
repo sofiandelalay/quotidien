@@ -4,7 +4,10 @@
 export const NTFY = 'https://ntfy.sh/';
 
 export function construireMessage({ topic, titre, message, livraison = null, priorite = 3, lien = '' }) {
-  const p = { topic, title: titre, message, priority: priorite };
+  const p = { topic, title: titre, message };
+  // Priorité seulement si elle diffère de la normale (3) : un ticket ntfy signale des messages
+  // JSON avec « priority » non affichés sur iOS (github.com/binwiederhier/ntfy/issues/461).
+  if (priorite && priorite !== 3) p.priority = priorite;
   if (livraison) p.delay = String(Math.floor(livraison.getTime() / 1000));
   if (lien) p.click = lien;
   return p;

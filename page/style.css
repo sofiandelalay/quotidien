@@ -77,7 +77,8 @@ small { color: var(--discret); font-size: 13px; margin-left: 6px; }
 .temp { display: flex; align-items: center; gap: 12px; font-size: 32px; font-variant-numeric: tabular-nums; }
 .temp .emoji { font-size: 44px; line-height: 1; }
 .temp b { font-weight: 600; }
-.pluie { color: var(--discret); margin: 6px 0 14px !important; }
+.ciel { color: var(--discret); margin: 6px 0 14px !important; }
+.ciel b { color: var(--texte); font-weight: 600; }
 .frise {
   display: grid;
   grid-template-columns: repeat(24, 1fr);
@@ -132,10 +133,9 @@ blockquote { margin: 0; }
 .fr { font-style: italic; }
 figcaption { margin-top: 8px; font-size: 14px; color: var(--discret); }
 figcaption small { margin-left: 0; }
-.hadith { border-top: 1px solid var(--trait); padding-top: 16px; }
+.verset { border-top: 1px solid var(--trait); padding-top: 16px; }
 .hadith blockquote p { font-size: 16px; }
 
-footer { text-align: center; font-size: 12px; color: var(--discret); margin: 20px 0 0; }
 
 @media (max-width: 360px) {
   .details { grid-template-columns: 1fr 1fr; }

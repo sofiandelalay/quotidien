@@ -29,7 +29,7 @@ export function prevision(pos, get = getJson) {
   return get(
     'https://api.open-meteo.com/v1/forecast' +
       `?latitude=${coord(pos.lat)}&longitude=${coord(pos.lon)}` +
-      '&hourly=temperature_2m,apparent_temperature,precipitation,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,uv_index' +
+      '&hourly=temperature_2m,apparent_temperature,precipitation,precipitation_probability,weather_code,cloud_cover,wind_speed_10m,wind_gusts_10m,uv_index' +
       '&daily=weather_code,temperature_2m_min,temperature_2m_max,sunrise,sunset' +
       '&timezone=Europe%2FParis&forecast_days=4&wind_speed_unit=kmh', // 4 jours : le jeudi soir, la règle rando regarde dimanche
   );

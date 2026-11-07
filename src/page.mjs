@@ -4,9 +4,8 @@
 import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { texteCreneaux } from './pluie.mjs';
-import { motAir, NOMS_POLLENS } from './analyse.mjs';
+import { motAir, NOMS_POLLENS, cielDuJour } from './analyse.mjs';
 import { choisirConseil } from './conseil.mjs';
-import { emojiMeteo } from './briefing.mjs';
 import { ecartJours } from './temps.mjs';
 
 const nombre = (v, dec = 1) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 10 ** dec) / 10 ** dec : null);
@@ -21,6 +20,7 @@ export function construireDonneesPage(d, { genere, passage, cfg }) {
   const m = d.meteo;
   const a = d.air;
   const seuils = cfg.pollens.seuils;
+  const ciel = m ? cielDuJour(m, cfg.ciel) : null;
   return {
     version: 1,
     genere: genere.toISOString(),
@@ -29,7 +29,8 @@ export function construireDonneesPage(d, { genere, passage, cfg }) {
     commune: texte(d.commune, 80) ?? 'Ma position',
     meteo: m
       ? {
-          emoji: emojiMeteo(m.code, m.creneaux.length > 0),
+          emoji: ciel.emoji,
+          ciel: ciel.mot,
           min: nombre(m.min, 0),
           max: nombre(m.max, 0),
           pluie: texteCreneaux(m.creneaux, cfg.pluie.creneaux_max),
@@ -45,10 +46,7 @@ export function construireDonneesPage(d, { genere, passage, cfg }) {
     conseil: choisirConseil(m, a, cfg),
     air: a
       ? {
-          indice: nombre(a.aqiMax, 0),
           mot: motAir(a.aqiMax, cfg.air.niveaux),
-          pm10: nombre(a.pm10Max, 0),
-          pm25: nombre(a.pm25Max, 0),
           pollens: Object.entries(a.pollens ?? {})
             .filter(([, v]) => typeof v === 'number' && v > 0)
             .map(([nom, v]) => ({ nom: NOMS_POLLENS[nom] ?? nom, valeur: nombre(v, 0), notable: seuils[nom] !== undefined && v >= seuils[nom] })),

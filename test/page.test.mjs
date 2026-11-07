@@ -85,7 +85,7 @@ test('data.json : liste blanche de champs, aucun champ sensible', () => {
   const d = construireDonneesPage(donneesCompletes(), { genere: new Date('2026-11-07T05:23:00Z'), passage: 'matin', cfg });
   const json = JSON.stringify(d);
   assert.deepEqual(Object.keys(d).sort(), ['air', 'commune', 'conseil', 'ferie', 'fete', 'genere', 'hadith', 'jour', 'meteo', 'passage', 'verset', 'version']);
-  assert.deepEqual(Object.keys(d.meteo).sort(), ['coucher', 'cumul', 'emoji', 'heures', 'lever', 'max', 'min', 'pluie', 'rafales_max', 'uv_max', 'vent_max']);
+  assert.deepEqual(Object.keys(d.meteo).sort(), ['ciel', 'coucher', 'cumul', 'emoji', 'heures', 'lever', 'max', 'min', 'pluie', 'rafales_max', 'uv_max', 'vent_max']);
   assert.deepEqual(Object.keys(d.meteo.heures[0]).sort(), ['h', 'mm', 'proba', 'temp']);
   assert.equal(d.meteo.heures.length, 24);
   for (const interdit of ['SECRET', 'Kiné', 'Marie', 'Anniversaire', '43.29', '5.36', '5.37', 'qb-', 'outlook', 'raccourci', 'lat', 'lon']) {
@@ -107,7 +107,7 @@ const data = () => construireDonneesPage(donneesCompletes(), { genere: new Date(
 
 test('rendu : toutes les sections, verset arabe en rtl avec sa référence, hadith avec numéro et source', () => {
   const html = rendre(data(), new Date('2026-11-07T10:00:00Z'));
-  for (const attendu of ['<h1>Lille</h1>', 'mis à jour à 6h23', '<b>6°</b> / <b>12°</b>', 'Pluie 14h–17h', 'class="frise"', 'Parapluie conseillé', 'moyen', 'Armistice', 'dans 4 jours', 'Carine', 'lang="ar" dir="rtl"', '<b>94:6</b>', 'Hadith n° <b>13</b>', 'Les quarante hadiths de an-Nawawi']) {
+  for (const attendu of ['<h1>Lille</h1>', 'mis à jour à 6h23', '<b>6°</b> / <b>12°</b>', '<b>Couvert</b> · pluie 14h–17h (4 mm)', 'class="frise"', 'Parapluie conseillé', 'moyen', 'Armistice', 'dans 4 jours', 'Carine', 'lang="ar" dir="rtl"', '<b>94:6</b>', 'Hadith et verset', 'Hadith n° <b>13</b> des quarante hadiths de an-Nawawi']) {
     assert.ok(html.includes(attendu), `manque : ${attendu}`);
   }
   assert.ok(!html.includes('class="alerte"'), 'données récentes : pas d\'avertissement');
@@ -126,7 +126,7 @@ test('rendu : section omise quand la source a échoué', () => {
   const sansVerset = rendre({ ...d, verset: null });
   assert.ok(!sansVerset.includes('dir="rtl"') && sansVerset.includes('Hadith n°'));
   const sansRien = rendre({ ...d, verset: null, hadith: null, air: null, ferie: null, fete: null });
-  assert.ok(!sansRien.includes('Du jour') && !sansRien.includes('<h2>Air</h2>') && !sansRien.includes('Prochain férié'));
+  assert.ok(!sansRien.includes('Hadith et verset') && !sansRien.includes('<h2>Air</h2>') && !sansRien.includes('Prochain férié'));
   assert.match(rendre({ ...d, meteo: null }), /Météo indisponible/);
 });
 
@@ -155,4 +155,25 @@ test('page : pas de service worker, manifest et icône déclarés, aucune dépen
   const manifest = JSON.parse(readFileSync(new URL('../page/manifest.webmanifest', import.meta.url), 'utf8'));
   assert.equal(manifest.display, 'standalone');
   assert.deepEqual(manifest.icons.map((i) => i.sizes), ['192x192', '512x512']);
+});
+
+test("ciel : mot d'après la couverture nuageuse, emoji cohérent avec la pluie", async () => {
+  const { cielDuJour } = await import('../src/analyse.mjs');
+  const m = (nuagesMoyens, code = 3, creneaux = []) => ({ nuagesMoyens, code, creneaux });
+  assert.deepEqual(cielDuJour(m(10), cfg.ciel), { mot: 'Ensoleillé', emoji: '☀️' });
+  assert.deepEqual(cielDuJour(m(30), cfg.ciel), { mot: 'Plutôt ensoleillé', emoji: '🌤️' });
+  assert.deepEqual(cielDuJour(m(60), cfg.ciel), { mot: 'Nuageux', emoji: '⛅' });
+  assert.deepEqual(cielDuJour(m(90), cfg.ciel), { mot: 'Couvert', emoji: '☁️' });
+  assert.deepEqual(cielDuJour(m(90, 61, [{ debut: 14, fin: 17 }]), cfg.ciel), { mot: 'Couvert', emoji: '🌧️' });
+  assert.deepEqual(cielDuJour(m(30, 80, [{ debut: 14, fin: 15 }]), cfg.ciel), { mot: 'Plutôt ensoleillé', emoji: '🌦️' });
+  assert.deepEqual(cielDuJour(m(null, 1), cfg.ciel), { mot: 'Plutôt ensoleillé', emoji: '🌤️' }, 'sans couverture nuageuse : code WMO');
+  assert.equal(cielDuJour(m(40, 95), cfg.ciel).mot, 'Orageux');
+  assert.equal(cielDuJour(m(100, 45), cfg.ciel).mot, 'Brouillard');
+});
+
+test("air : seulement le mot et les pollens notables, sans indice ni particules", () => {
+  const d = data();
+  assert.deepEqual(Object.keys(d.air).sort(), ['mot', 'pollens']);
+  const html = rendre({ ...d, air: { mot: 'bon', pollens: [{ nom: 'bouleau', valeur: 120, notable: true }, { nom: 'graminées', valeur: 4, notable: false }] } });
+  assert.ok(html.includes('Pollens : bouleau</p>') && !html.includes('graminées') && !html.includes('120'));
 });
