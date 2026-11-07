@@ -1,6 +1,8 @@
 {
   "version": 1,
-  "dernier_passage": "2026-11-07T14:55:06.111Z",
-  "passages": {},
+  "dernier_passage": "2026-11-07T19:29:29.709Z",
+  "passages": {
+    "soir": "2026-11-07"
+  },
   "alertes": {}
 }
